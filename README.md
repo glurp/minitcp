@@ -49,12 +49,12 @@ Sockets
 ==
 
 Handlers are disponibles for any sockets : client or server. 
-All handler bloc run in distinct thread : so any handler-bloc can wait anything.
+All handler's bloc run in distinct thread : so any handler-bloc can wait anything.
 if socket is closed, handler/thread are killed.
-* **socket.on_any_receive() {|data| ...}**          : on receive some data, any size
-* **socket.on_n_receive(sizemax=1) {|data| ...}**   : receives n byte(s) only
-* **socket.on_receive_sep(";") {|field | ... }**    : reveive data until string separator
-* **socket.on_timer(value_ms) { ... }**             : each time do something, if socket is open
+* socket**.on_any_receive() {|data| ...}**          : on receive some data, any size
+* socket**.on_n_receive(sizemax=1) {|data| ...}**   : receives n byte(s) only
+* socket**.on_receive_sep(";") {|field | ... }**    : reveive data until string separator
+* socket**.on_timer(value_ms) { ... }**             : each time do something, if socket is open
 
 some primitives are here for help (no thread):
 * **received_timeout(sizemax,timeout)** : wait for n bytes, with timeout, (blocking caller)
