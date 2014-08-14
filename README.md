@@ -21,7 +21,10 @@ srv=MServer.service(2200,"0.0.0.0",22) do |socket|
     puts "  Server recieved: #{data.inspect}" 
 	socket.print(data)
   end
-  socket.on_timer(2000) { socket.puts "CouCou say server @ #{Time.now}" rescue nil }
+  socket.on_timer(2000) do
+    socket.puts "I am tired!!" 
+	socket.close
+  end
   socket.wait_end
   puts "  end server connection!"
 end   
