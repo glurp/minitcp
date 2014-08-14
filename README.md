@@ -27,6 +27,9 @@ srv=MServer.service(2200,"0.0.0.0",22) do |socket|
 end   
 ```
 
+This tool have no pretention : it is not EventMachine ! : no mainloop, many threads are created/deleted.
+it is useful for send some data one shot, test a ascii communication in few minutes...
+
 Client
 ==
 
@@ -46,9 +49,10 @@ Sockets
 ==
 
 Handlers are disponibles for any sockets : client or server. 
-All handler bloc run in distinct thead : so any handler-bloc can wait anything
+All handler bloc run in distinct thread : so any handler-bloc can wait anything.
+if socket is closed, handler/thread are killed.
 * **socket.on_any_receive() {|data| ...}**          : on receive some data, any size
-* **socket.on_n_receive(sizemax=1) {|data| ...}**   : receives n byte only
+* **socket.on_n_receive(sizemax=1) {|data| ...}**   : receives n byte(s) only
 * **socket.on_receive_sep(";") {|field | ... }**    : reveive data until string separator
 * **socket.on_timer(value_ms) { ... }**             : each time do something, if socket is open
 
