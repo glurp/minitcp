@@ -1,6 +1,9 @@
 Minitcp
 ===
 
+Presentation
+==
+
 A little tool for doing some socket communication.
 
 A simple TCP client :
@@ -25,7 +28,7 @@ end
 ```
 
 Client
-===
+==
 
 ```
 MClient.run_one_shot(host,port) do |socket| ... end
@@ -33,35 +36,35 @@ MClient.run_continous(host,port,time_inter_connection) do |socket| ... end
 ```
 
 Server
-===
+==
 
 ```ruby
 srv=MServer.service(port,"0.0.0.0",max_client) do |socket| ... end
 ```
 
 Sockets
-===
+==
 
-Handlers are disponibles for any socket : client or server. 
-all handler bloc run in distict thead : so any handler-bloc can wait anything
-* socket.on_any_receive() {|data| ...}          : on receive some data, any size
-* socket.on_n_receive(sizemax=1) {|data| ...}   : receives n byte only
-* socket.on_receive_sep(";") {|field | ... }    : reveive data until string separator
-* socket.on_timer(value_ms) { ... }             : each time do something, if socket is open
+Handlers are disponibles for any sockets : client or server. 
+All handler bloc run in distinct thead : so any handler-bloc can wait anything
+* **socket.on_any_receive() {|data| ...}**          : on receive some data, any size
+* **socket.on_n_receive(sizemax=1) {|data| ...}**   : receives n byte only
+* **socket.on_receive_sep(";") {|field | ... }**    : reveive data until string separator
+* **socket.on_timer(value_ms) { ... }**             : each time do something, if socket is open
 
-some primitives are here for help:
-* received_timeout(sizemax,timeout) : wait for n bytes, with timeout, (blocking caller)
-* socket.after(duration) { ... }    : d somethinf after n millisecondes, if socket is open
-* wait_end()                        : wait, (blocking caller) until socket is close
+some primitives are here for help (no thread):
+* **received_timeout(sizemax,timeout)** : wait for n bytes, with timeout, (blocking caller)
+* **socket.after(duration) { ... }**    : d somethinf after n millisecondes, if socket is open
+* **wait_end()**                        : wait, (blocking caller) until socket is close
 
 
-Test case
-===
-A tcp serveur which send some data to eany client,
+Tests case
+==
+
+A tcp serveur which send some data to any client,
 ```ruby
-    BasicSocket.do_not_reverse_lookup = true
-    Thread.abort_on_exception = true
-	if ARGV.size==0 || ARGV[0]=="1"
+		BasicSocket.do_not_reverse_lookup = true
+		Thread.abort_on_exception = true
 		puts "**********************************************************"
 		puts "** Test basic, one client, multi client"
 		puts "**********************************************************"
@@ -74,7 +77,8 @@ A tcp serveur which send some data to eany client,
 		  puts "  end server connection!"
 	   end   
 ```
-Some clients which connect, print any data received :
+
+Some clients which connect to a server, print any data received :
 
 ```ruby
 	   
@@ -87,7 +91,7 @@ Some clients which connect, print any data received :
 	   end.each {|th| th.join}
 ```
 
-Test serial protocole-like : header/body => ack/timeout:
+Test serial **protocole-like** : header/body => ack/timeout:
 * client send <length><data> , wait one char ackit or timeout
 * serveur receive heade( size: 4 chars) , then data with maxsize, send ack
 
@@ -123,4 +127,52 @@ Test serial protocole-like : header/body => ack/timeout:
 		   p "end client"
 	   end.join
    end
+```
+
+
+Traces :
+```
+**********************************************************
+** Test serial protocole-like : header/body => ack/timeout
+**********************************************************
+[2200, "0.0.0.0", 22]
+[Thu Aug 14 22:40:17 2014] MServer 0.0.0.0:2200 start
+Sending 6 data...
+[Thu Aug 14 22:40:17 2014] MServer 0.0.0.0:2200 client:44276 127.0.0.1<127.0.0.1> connect
+  Server recieved buffer : "******"
+  !!!non-ack by serv
+"!!! timeout ack"
+Sending 1 data...
+  Server recieved buffer : "*"
+  !!!non-ack by serv
+"!!! timeout ack"
+Sending 6 data...
+  Server recieved buffer : "******"
+"ack ok"
+Sending 4 data...
+  Server recieved buffer : "****"
+  !!!non-ack by serv
+"!!! timeout ack"
+Sending 3 data...
+  Server recieved buffer : "***"
+  !!!non-ack by serv
+"!!! timeout ack"
+Sending 1 data...
+  Server recieved buffer : "*"
+  !!!non-ack by serv
+"!!! timeout ack"
+Sending 1 data...
+  Server recieved buffer : "*"
+"ack ok"
+Sending 4 data...
+  Server recieved buffer : "****"
+"ack ok"
+Sending 9 data...
+  Server recieved buffer : "*********"
+  !!!non-ack by serv
+"!!! timeout ack"
+Sending 3 data...
+  Server recieved buffer : "***"
+"ack ok"
+"end client"
 ```
