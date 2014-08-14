@@ -55,10 +55,10 @@ if socket is closed, handler/thread are killed.
 * socket.**on_n_receive(sizemax=1) {|data| ...}**   : receives n byte(s) only
 * socket.**on_receive_sep(";") {|field | ... }**    : reveive data until string separator
 * socket.**on_timer(value_ms) { ... }**             : each time do something, if socket is open
+* socket.**after(duration) { ... }**    : do something after n millisecondes, if socket is open
 
 some primitives are here for help (no thread):
 * **received_timeout(sizemax,timeout)** : wait for n bytes, with timeout, (blocking caller)
-* **socket.after(duration) { ... }**    : d somethinf after n millisecondes, if socket is open
 * **wait_end()**                        : wait, (blocking caller) until socket is close
 
 
