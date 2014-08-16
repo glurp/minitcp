@@ -4,7 +4,14 @@ Minitcp
 Presentation
 ==
 
-A little tool for doing some socket communication.
+A little tool for doing some TCP sockets communications.
+
+This tool have no pretention : it is not EventMachine ! : 
+* no mainloop, 
+* many threads are created/deleted.
+* it is useful for send some data one shot, test a ascii communication in few minutes...
+* should be equivalent oh netcat+bash :)
+
 
 A  TCP client :
 ```ruby
@@ -20,38 +27,16 @@ An echo server :
 srv=MServer.service(2200,"0.0.0.0",22) do |socket|
   socket.on_any_receive do |data| 
     puts "  Server recieved: #{data.inspect}" 
-	socket.print(data)
+	  socket.print(data)
   end
   socket.on_timer(2000) do
     socket.puts "I am tired!!" 
-	socket.close
+	  socket.close
   end
   socket.wait_end
-  puts "  end server connection!"
-end   
-```
-A proxy/debug tool :
-
-```ruby
-MServer.service(2200,"0.0.0.0",22) do |scli|
-  px 2, "======== client Connected ========"
-  srv=MClient.run_one_shot("ip",2200) do |ssrv|
-     px 1, "======== server Concected ========"
-     ssrv.on_any_receive { |data| px 1,data; scli.print data }
-     scli.on_any_receive { |data| px 2,data; ssrv.print data}
-     ssrv.wait_end
-  end.join
-  scli.wait_end
-  srv.stop
-end   
-def px(sens,data)
-  data.each_line {|line| puts "#{(sens==1 ? "> " : "< ")}#{line.chomp}"
 end
-
 ```
 
-This tool have no pretention : it is not EventMachine ! : no mainloop, many threads are created/deleted.
-it is useful for send some data one shot, test a ascii communication in few minutes...
 
 Client
 ==
@@ -73,7 +58,7 @@ Sockets
 
 Handlers are disponibles for any sockets : client or server. 
 All handler's bloc run in distinct thread : so any handler-bloc can wait anything.
-if socket is closed, handler/thread are killed.
+if socket is closed, handler/thread are cleanly (?) stoped.
 * socket.**on_any_receive() {|data| ...}**          : on receive some data, any size
 * socket.**on_n_receive(sizemax=1) {|data| ...}**   : receives n byte(s) only
 * socket.**on_receive_sep(";") {|field | ... }**    : reveive data until string separator
@@ -87,36 +72,28 @@ some primitives are here for help (no thread):
 
 Tests case
 ==
-
-A tcp serveur which send some data to any client,
-```ruby
-		BasicSocket.do_not_reverse_lookup = true
-		Thread.abort_on_exception = true
-		puts "**********************************************************"
-		puts "** Test basic, one client, multi client"
-		puts "**********************************************************"
-	   srv=MServer.service(2200,"0.0.0.0",22) do |socket|
-		  socket.after(100) { socket.puts "Hello client" }
-		  socket.on_any_receive { |data| puts "  Server recieved: #{data.inspect}" }
-		  socket.on_timer(2000) { socket.puts "CouCou say server @ #{Time.now}" rescue nil }
-		  puts "  srv waiting..."
-		  socket.wait_end
-		  puts "  end server connection!"
-	   end   
-```
-
-Some clients which connect to a server, print any data received :
+A proxy,debug tool (see samples/proxy.rb) :
 
 ```ruby
-	   
-	   
-	   (0..10).map do|i|
-		 MClient.run_one_shot("localhost",2200) do |socket|
-		   socket.on_any_receive { |data| p "Client #{i} recieved #{data.inspect}" }
-		   3.times { |j| socket.puts "Hello from #{i} @ #{j}..." ; sleep(0.1) }
-		 end
-	   end.each {|th| th.join}
+MServer.service(2200,"0.0.0.0",22) do |scli|
+  px 2, "======== client Connected ========"
+  srv=MClient.run_one_shot("ip",2200) do |ssrv|
+     px 1, "======== server Concected ========"
+     ssrv.on_any_receive { |data| px 1,data; scli.print data }
+     scli.on_any_receive { |data| px 2,data; ssrv.print data}
+     ssrv.wait_end
+  end.join
+  scli.wait_end
+  srv.stop
+end   
+def px(sens,data)
+  data.each_line {|line| puts "#{(sens==1 ? "> " : "< ")}#{line.chomp}"
+end
+
 ```
+
+
+
 
 Test serial **protocole-like** : header/body => ack/timeout:
 * client send <length><data> , wait one char ackit or timeout
@@ -125,83 +102,36 @@ Test serial **protocole-like** : header/body => ack/timeout:
 
 ```ruby
    
-		puts "**********************************************************"
-		puts "** Test serial protocole-like : header/body => ack/timeout"
-		puts "**********************************************************"
-	   srv=MServer.service(2200,"0.0.0.0",22) do |socket|
-		  socket.on_n_receive(4) { |data| 
-			 size=data.to_i
-			 data=socket.recv(size)
-			 puts "  Server recieved buffer : #{data.inspect}"
-			 if rand(100)>50
-				socket.print("o") 
-			 else 
-				puts "  !!!non-ack by serv"
-			 end
-		  }
-		  socket.on_timer(40*1000) { puts " serv close after 40 seconds"; socket.close }
-		  socket.wait_end
-	   end   
-	   MClient.run_one_shot("localhost",2200) do |socket|
-		   10.times { |j| 
-			 size=rand(1..10)
-			 puts "Sending #{size} data..."
-			 data='*'*size
-			 socket.print "%04d" % size
-			 socket.print data 
-			 p socket.received_timeout(1,100)  ? "ack ok" : "!!! timeout ack"
-		   }
-		   p "end client"
-	   end.join
-   end
-```
+puts "**********************************************************"
+puts "** Test serial protocole-like : header/body => ack/timeout"
+puts "**********************************************************"
+srv=MServer.service(2200,"0.0.0.0",22) do |socket|
+  socket.on_n_receive(4) { |data| 
+     size=data.to_i
+     data=socket.recv(size)
+     puts "  Server recieved buffer : #{data.inspect}"
+     if rand(100)>50
+        socket.print("o") 
+     else 
+        puts "  !!!non-ack by serv"
+     end
+  }
+  socket.on_timer(40*1000) { puts " serv close after 40 seconds"; socket.close }
+  socket.wait_end
+end   
+
+MClient.run_one_shot("localhost",2200) do |socket|
+   10.times { |j| 
+	   size=rand(1..10)
+	   puts "Sending #{size} data..."
+	   data='*'*size
+	   socket.print "%04d" % size
+	   socket.print data 
+	   p socket.received_timeout(1,100)  ? "ack ok" : "!!! timeout ack"
+   }
+   p "end client"
+end.join
 
 
-Traces :
-```
-**********************************************************
-** Test serial protocole-like : header/body => ack/timeout
-**********************************************************
-[2200, "0.0.0.0", 22]
-[Thu Aug 14 22:40:17 2014] MServer 0.0.0.0:2200 start
-Sending 6 data...
-[Thu Aug 14 22:40:17 2014] MServer 0.0.0.0:2200 client:44276 127.0.0.1<127.0.0.1> connect
-  Server recieved buffer : "******"
-  !!!non-ack by serv
-"!!! timeout ack"
-Sending 1 data...
-  Server recieved buffer : "*"
-  !!!non-ack by serv
-"!!! timeout ack"
-Sending 6 data...
-  Server recieved buffer : "******"
-"ack ok"
-Sending 4 data...
-  Server recieved buffer : "****"
-  !!!non-ack by serv
-"!!! timeout ack"
-Sending 3 data...
-  Server recieved buffer : "***"
-  !!!non-ack by serv
-"!!! timeout ack"
-Sending 1 data...
-  Server recieved buffer : "*"
-  !!!non-ack by serv
-"!!! timeout ack"
-Sending 1 data...
-  Server recieved buffer : "*"
-"ack ok"
-Sending 4 data...
-  Server recieved buffer : "****"
-"ack ok"
-Sending 9 data...
-  Server recieved buffer : "*********"
-  !!!non-ack by serv
-"!!! timeout ack"
-Sending 3 data...
-  Server recieved buffer : "***"
-"ack ok"
-"end client"
 ```
 
-This codes are  in source ($0==__FILE__), so runing minitcp.rb will execute tests...
