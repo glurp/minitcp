@@ -6,7 +6,7 @@ Presentation
 
 A little tool for doing some socket communication.
 
-A simple TCP client :
+A  TCP client :
 ```ruby
 MClient.run_one_shot("localhost",2200) do |socket|
    socket.on_any_receive { |data| p "client recieved #{data.inspect}"}
@@ -14,7 +14,8 @@ MClient.run_one_shot("localhost",2200) do |socket|
 end.join
 ```
 
-A simple echo server
+An echo server :
+
 ```ruby
 srv=MServer.service(2200,"0.0.0.0",22) do |socket|
   socket.on_any_receive do |data| 
@@ -28,6 +29,25 @@ srv=MServer.service(2200,"0.0.0.0",22) do |socket|
   socket.wait_end
   puts "  end server connection!"
 end   
+```
+A proxy/debug tool :
+
+```ruby
+MServer.service(2200,"0.0.0.0",22) do |scli|
+  px 2, "======== client Connected ========"
+  srv=MClient.run_one_shot("ip",2200) do |ssrv|
+     px 1, "======== server Concected ========"
+     ssrv.on_any_receive { |data| px 1,data; scli.print data }
+     scli.on_any_receive { |data| px 2,data; ssrv.print data}
+     ssrv.wait_end
+  end.join
+  scli.wait_end
+  srv.stop
+end   
+def px(sens,data)
+  data.each_line {|line| puts "#{(sens==1 ? "> " : "< ")}#{line.chomp}"
+end
+
 ```
 
 This tool have no pretention : it is not EventMachine ! : no mainloop, many threads are created/deleted.
