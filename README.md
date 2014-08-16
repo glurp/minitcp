@@ -10,7 +10,7 @@ This tool have no pretention : it is not EventMachine ! :
 * no mainloop, 
 * many threads are created/deleted.
 * it is useful for send some data one shot, test a ascii communication in few minutes...
-* should be equivalent oh netcat+bash :)
+* should be equivalent to netcat+bash :)
 
 
 A  TCP client :
@@ -27,11 +27,11 @@ An echo server :
 srv=MServer.service(2200,"0.0.0.0",22) do |socket|
   socket.on_any_receive do |data| 
     puts "  Server recieved: #{data.inspect}" 
-	  socket.print(data)
+    socket.print(data)
   end
   socket.on_timer(2000) do
     socket.puts "I am tired!!" 
-	  socket.close
+    socket.close
   end
   socket.wait_end
 end
@@ -45,6 +45,7 @@ Client
 MClient.run_one_shot(host,port) do |socket| ... end
 MClient.run_continous(host,port,time_inter_connection) do |socket| ... end
 ```
+Client socket is extended with all specifiques commandes (handler...).
 
 Server
 ==
@@ -52,6 +53,8 @@ Server
 ```ruby
 srv=MServer.service(port,"0.0.0.0",max_client) do |socket| ... end
 ```
+Mserver run a GServer. 
+connected sockets are extended with same module as in client.
 
 Sockets
 ==
@@ -102,9 +105,6 @@ Test serial **protocole-like** : header/body => ack/timeout:
 
 ```ruby
    
-puts "**********************************************************"
-puts "** Test serial protocole-like : header/body => ack/timeout"
-puts "**********************************************************"
 srv=MServer.service(2200,"0.0.0.0",22) do |socket|
   socket.on_n_receive(4) { |data| 
      size=data.to_i
