@@ -40,6 +40,7 @@ module SocketReactive
           return buff unless looping
         end
       else
+        close rescue nil
         break # socket close
       end
     end #loop
@@ -73,6 +74,7 @@ module SocketReactive
       rescue Exception => e
         puts  "#{e} :\n  #{e.backtrace.join("\n  ")}"
       end
+      close rescue nil
     end
   end
 
@@ -118,6 +120,7 @@ module SocketReactive
           a=(self.data_readed).split(separator,2)
         end
       else
+        close rescue nil
         break
       end
     end
@@ -181,15 +184,15 @@ module SocketReactive
 
   # Test if a socket is open. (use socket.remote_address() !)
   def connected?()
-    (remote_address rescue nil) ? true : false
+    (self.remote_address rescue nil) ? true : false
   end
-  # duration of sleep when active wait (soclet_wait,on_timer...)
+  # duration of sleep when active wait (wait_end,on_timer...)
   TICK=600
 
   def self.make_socket_reactive(socket)
     socket.extend(SocketReactive)
     socket.data_readed=""
-  end # end make...
+  end
 end
 
 #	MClient.run_one_shot("localhost",2200)       do |socket| .. end.join
