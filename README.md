@@ -95,9 +95,10 @@ MServer.service(2200,"0.0.0.0",22) do |scli|
      ssrv.on_any_receive { |data| px 1,data; scli.print data }
      scli.on_any_receive { |data| px 2,data; ssrv.print data}
      ssrv.wait_end
-  end.join
+     scli.close rescue nil
+  end
   scli.wait_end
-  srv.stop
+  srv.stop rescue nil
 end   
 def px(sens,data)
   data.each_line {|line| puts "#{(sens==1 ? "> " : "< ")}#{line.chomp}"
