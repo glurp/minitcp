@@ -14,6 +14,7 @@ This tool have no pretention : it is not EventMachine ! :
 
 
 A  TCP client :
+
 ```ruby
 MClient.run_one_shot("localhost",2200) do |socket|
    socket.on_any_receive { |data| p "client recieved #{data.inspect}"}
