@@ -70,8 +70,17 @@ if socket is closed, handler/thread are cleanly (?) stoped.
 
 some primitives are here for help (no thread):
 * **received_timeout(sizemax,timeout)** : wait for n bytes, with timeout, (blocking caller)
-* **wait_end()**                        : wait, (blocking caller) until socket is close
+* **wait_end()**                        : wait, (blocking caller) until socket is close. this
+  work only if something has closed the socket.this is possible unicly by receiving 0 bte on a socket reading.
 
+TODO
+==
+
+* UDP, Multicast
+* encoding : actualy, minitcp read BINASCII encoding, notinh is done for other form,
+* more socket primitive
+* less thread, better performance, :)
+* rewriting for mainloop environement : gtk, qt, EM ...
 
 Tests case
 ==
