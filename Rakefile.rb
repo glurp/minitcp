@@ -161,15 +161,6 @@ task :commit => [:pre_commit,"commit_status",:post_commit]
 #############################################################
 desc "make a gem and push it to gemcutter"
 task :gem => :commit do
-  puts <<EEND
-
-
---------------------------------------------------------------------
-       make gem, test it localy, and push gem #{NAME} to gemcutter
---------------------------------------------------------------------
-EEND
-  ruby "samples/make_doc.rb","1"
-  sh "git commit doc.html -m update"
   sh "git push"
   $version=change_version { |a| 
       a[-2]=(a[-2].to_i+1) 
@@ -184,7 +175,7 @@ EEND
   Rake::Task["test"].execute    if File.exists?("samples/test.rb")
   sh "gem push #{gem_name}"
   l.each { |fn|
-      ov=fn.split('-')[1].gsub('.gem',"")
+    ov=fn.split('-')[1].gsub('.gem',"")
     sh "gem yank -v #{ov} #{NAME}"
   }
 end
