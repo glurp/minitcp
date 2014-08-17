@@ -1,3 +1,7 @@
+0.2.1
+    test.rb : sleep before thread good stoping detection
+    minitcp.rb : all read hendler do socket close when necessary
+    README.md : todo
 0.2.0 : 2014-08-17 16:07:03 +0200
     Rakefile.rb : update
     test.rb : license
