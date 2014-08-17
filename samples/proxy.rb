@@ -34,7 +34,7 @@ def spy(sens,data)
     data.each_line {|line| puts "#{prefix}#{line.chomp}"  }
   else
     data.chars.each_slice(16) do |aline|
-      a=(aline.map { |char| "%02X " % char.ord }).join.ljust(16*3)+pref+
+      a=(aline.map { |char| "%02X " % char.ord }).join.ljust(16*3)+prefix+
          aline.map { |char| (char.ord>30 ? char : "~") }.join()
       puts "#{prefix}#{a}"
     end
