@@ -1,4 +1,4 @@
-0.1.2
+0.2.0 : 2014-08-17 16:07:03 +0200
     Rakefile.rb : update
     test.rb : license
     proxy.rb : license
