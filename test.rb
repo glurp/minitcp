@@ -7,7 +7,7 @@ Thread.abort_on_exception = true
 
 if ARGV.size==0 || ARGV[0]=="1"
   puts "**********************************************************"
-  puts "** Test basic, one client, multi client"
+  puts "** Test basic, one client, multi client, any receive"
   puts "**********************************************************"
   srv=MServer.service(2200,"0.0.0.0",22) do |socket|
     socket.after(100) { socket.puts "Hello client" }
@@ -28,7 +28,7 @@ if ARGV.size==0 || ARGV[0]=="1"
   puts "\n"*5
   sleep(1)
   srv.stop rescue nil
-  sleep(1)
+  sleep(3)
   puts "Tread list : #{Thread.list} / current= #{Thread.current.inspect}"
 end
 
@@ -68,7 +68,7 @@ if  ARGV.size==0 || ARGV[0]=="2"
   end.join
   sleep 1
   puts "\n"*3
-  sleep 1
+  sleep 3
   puts "srv stop..."
   srv.stop rescue nil
   sleep 1
@@ -110,7 +110,7 @@ if ARGV.size==0 || ARGV[0]=="3"
 
   sleep 1
   puts "\n"*3
-  sleep 1
+  sleep 3
   puts "srv stop..."
   srv1.stop rescue nil
   srv2.stop rescue nil
@@ -153,7 +153,7 @@ if ARGV.size==0 || ARGV[0]=="4"
 
   sleep 1
   puts "\n"*3
-  sleep 1
+  sleep 3
   puts "srv stop..."
   srv.stop rescue p $!
   sleep 1
