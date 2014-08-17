@@ -1,4 +1,6 @@
-0.2.1
+0.3.1
+    README.md : todo, presentation
+0.3.0 : 2014-08-18 01:27:40 +0200
     test.rb : sleep before thread good stoping detection
     minitcp.rb : all read hendler do socket close when necessary
     README.md : todo
