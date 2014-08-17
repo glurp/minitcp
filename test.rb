@@ -1,4 +1,5 @@
-require_relative 'minitcp.rb'
+# LGPL
+require_relative 'lib/minitcp.rb'
 
 BasicSocket.do_not_reverse_lookup = true
 Thread.abort_on_exception = true
@@ -25,9 +26,9 @@ if ARGV.size==0 || ARGV[0]=="1"
   puts "server connection should be stoped !!!"
   sleep(1) 
   puts "\n"*5
-  sleep(5)
+  sleep(1)
   srv.stop rescue nil
-  sleep(5)
+  sleep(1)
   puts "Tread list : #{Thread.list} / current= #{Thread.current.inspect}"
 end
 
@@ -67,10 +68,10 @@ if  ARGV.size==0 || ARGV[0]=="2"
   end.join
   sleep 1
   puts "\n"*3
-  sleep 3
+  sleep 1
   puts "srv stop..."
   srv.stop rescue nil
-  sleep 3
+  sleep 1
   puts "Tread list : #{Thread.list} / current= #{Thread.current.inspect}"
 end
 
@@ -103,17 +104,17 @@ if ARGV.size==0 || ARGV[0]=="3"
    MClient.run_one_shot("localhost",2200) do |socket|
      socket.on_any_receive { |data| p "client recieved #{data}"}
      p "connected in client"
-     40.times { |j| socket.print "C#{j} #{"+"*j*10}" ; sleep(0.1) }
+     10.times { |j| socket.print "C#{j} #{"+"*j*3}" ; sleep(0.1) }
      p "end client"
    end.join
 
   sleep 1
   puts "\n"*3
-  sleep 3
+  sleep 1
   puts "srv stop..."
   srv1.stop rescue nil
   srv2.stop rescue nil
-  sleep 3
+  sleep 1
   puts "Tread list : #{Thread.list} / current= #{Thread.current.inspect}"
 end
 
@@ -121,7 +122,7 @@ if ARGV.size==0 || ARGV[0]=="4"
   puts "**********************************************************"
   puts "** Test sending with separator"
   puts "**********************************************************"
-$tm=Time.now
+  $tm=Time.now
   srv=MServer.service(2200,"0.0.0.0",22) do |socket|
     l,ll=[],[]
     socket.on_receive_sep(/([\.;$!])/) { |(data,sep)| 
@@ -152,10 +153,10 @@ $tm=Time.now
 
   sleep 1
   puts "\n"*3
-  sleep 3
+  sleep 1
   puts "srv stop..."
   srv.stop rescue p $!
-  sleep 3
+  sleep 1
   puts "Tread list : #{Thread.list} / current= #{Thread.current.inspect}"
 end
 
