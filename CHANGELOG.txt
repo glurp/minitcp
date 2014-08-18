@@ -1,4 +1,6 @@
-0.3.6
+0.3.7
+    minitcp.rb : error on stdout for SocketReactive
+    README.md : typo
     README.md : sockets presentation
     README.md : rdoc url
     minitcp.rb : comments
