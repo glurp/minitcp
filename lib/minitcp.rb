@@ -195,18 +195,30 @@ module SocketReactive
   end
 end
 
+# Assure connection to server, extend socket connection by SocketReactive module.
+#
 #	MClient.run_one_shot("localhost",2200)       do |socket| .. end.join
+#
 #	MClient.run_continous("localhost",2200,6000) do |socket| .. end.join
+#
 class MClient
-  def self.run_continous(host,port,timer_interconnection,&b)
+  # maintain a conntection to a TCP serveur, sleep timer_interconnection_ms millisecondes
+  # beetwen each reconnections 
+  def self.run_continious(host,port,timer_interconnection_ms,&b)
     Thread.new do
-      loop { run_one_shot(host,port,&b).join ; sleep timer_interconnection }
+      loop { run_one_shot(host,port,&b).join ; sleep timer_interconnection/1000.0 }
     end
   end
 
+  def self.run_continous(host,port,timer_interconnection,&b)
+    self.run_continious(host,port,timer_interconnection,&b)
+  end
+
+  # Connecte to a TCP server, call block with client socket if connection sucess.
+  # enssure close connection after end of block
   def self.run_one_shot(host="localhost",port=80)
     begin
-      sleep(0.03)
+      sleep(0.03) # give some time for server ready (for test...)
       socket = TCPSocket.new(host,port)
     rescue
       puts "not connected to #{host}:#{port}: " + $!.to_s
@@ -225,7 +237,10 @@ class MClient
   end
 end
 
-#MServer( "8080" , "0.0.0.0" ,1) { |socket| loop { p socket.gets} }
+# Run a TCP serveur, with a max connection simultaneous,
+# When connection succes, call the bloc given with socket (extended by SocketReactive).
+#
+# MServer( "8080" , "0.0.0.0" ,1) { |socket| loop { p socket.gets} }
 class MServer < GServer
   include SocketReactive
   def self.service(port,host,max,&b)
@@ -243,7 +258,7 @@ class MServer < GServer
     begin
       @bloc.call(io)
     rescue Exception => e
-      puts  "Error in Mserver bloc: #{e} :\n  #{e.backtrace.join("\n  ")}"
+      puts  "Error in Mserver block: #{e} :\n  #{e.backtrace.join("\n  ")}"
     end
   end
 end
