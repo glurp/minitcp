@@ -11,18 +11,18 @@ require 'Ruiby'
 HHEAD=20
 $bgcolor=::Gdk::Color.parse("#023")
 $fgcolor=[
-	::Gdk::Color.parse("#FFAAFF"),
+	::Gdk::Color.parse("#99DDFF"),
 	::Gdk::Color.parse("#FFAA00"),
 	::Gdk::Color.parse("#00FF00"),
 	::Gdk::Color.parse("#0000FF"),
 	::Gdk::Color.parse("#FFFF00"),
 	::Gdk::Color.parse("#00FFFF"),
 	::Gdk::Color.parse("#FF00FF"),
-	::Gdk::Color.parse("#AAAAAA"),
+	::Gdk::Color.parse("#999"),
 ]
 PAS=2
 H=100
-W=400
+W=200
 $o,$curve,$coef=[],[],[]
 while ARGV.size>=4 
   $curve << []
@@ -46,20 +46,26 @@ def run(app)
 		    p [i,value,v,pos,$coef[i]] if $DEBUG
 		end
 		gui_invoke { @cv.redraw }
-	else
+	else 
 		exit!(0)
 	end
 end
-
-
+$mtime=File.mtime(__FILE__)
+trap("TERM") { exit!(0) }
 Ruiby.app width: W, height: H, title: "Curve" do
 	stack do
 		@cv=canvas(W,H) do
 			on_canvas_draw { |w,ctx| expose(w,ctx) } 
-			on_canvas_button_press{ |w,e| alert("kp");  system("lxterminal", "-c", "htop") }
+			on_canvas_button_press do |w,e| 
+				case e.button 
+					when 1 then system("lxterminal", "-e", "htop") 
+					when 3 then Process.spawn("gnome-system-monitor") 
+					when 2 then ask("Exit ?") && exit(0) 
+				end
+			end
+
         end		
 	end
-	@cv.signal("")
 	rposition(1,1)
 	after(4*1000) { chrome(false); move(-1,-20) }
 	Thread.new(self) { |app| sleep(1) ; loop { run(app) } }
@@ -74,7 +80,14 @@ Ruiby.app width: W, height: H, title: "Curve" do
 		return if $curve[0].size < 3
 		$curve.each_with_index do |curve,noc|
 			a,*l=curve
-			ctx.set_line_width(2)
+			ctx.set_line_width(3)
+			color=$fgcolor.last
+			ctx.set_source_rgba(color.red/65000.0,color.green/65000.0,color.blue/65000.0, 0.6)
+			ctx.move_to(a.first,a.last)
+			l.each {|(x,y)| ctx.line_to(x,y) }
+			ctx.stroke   
+
+			ctx.set_line_width(1)
 			color=$fgcolor[noc % $fgcolor.size]
 			ctx.set_source_rgba(color.red/65000.0,color.green/65000.0,color.blue/65000.0, 1)
 			ctx.move_to(*a)
@@ -84,8 +97,9 @@ Ruiby.app width: W, height: H, title: "Curve" do
 		$coef.each_with_index do |c,noc|
 			color=$fgcolor[noc % $fgcolor.size]
 			ctx.set_source_rgba(color.red/65000.0,color.green/65000.0,color.blue/65000.0, 1)
-			ctx.move_to(10,(HHEAD-5)*(noc+2));ctx.show_text(c[:name])
+			ctx.move_to(5+30*noc,HHEAD-5);ctx.show_text(c[:name])
 		end
-		ctx.move_to(10,HHEAD-5);ctx.show_text($str.chomp)
+		#ctx.move_to(10,HHEAD-5);ctx.show_text($str.chomp)
+		(puts "source modified!!!";exit!(0)) if File.mtime(__FILE__)!=$mtime 
 	end
 end
