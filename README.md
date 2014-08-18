@@ -75,9 +75,14 @@ if socket is closed, handler/thread are cleanly (?) stoped.
 
 Some primitives are here for help (no thread):
 
-* **received_timeout(sizemax,timeout)** : wait for n bytes, with timeout, (blocking caller)
+* **received_timeout(sizemax,timeout)** : wait for n bytes, with timeout, (blocking caller),
 * **wait_end()**                        : wait, (blocking caller) until socket is close. this
-  work only if something has closed the socket.this is possible unicly by receiving 0 bte on a socket reading.
+  work only if something has closed the socket.this is possible unicly by receiving 0 bte on a
+* **receive_n_bytes** / **on_receive_sep** : bocking version of handler,
+* **connected?** : test if a close have been done,  
+* **data_readed()** : some receives (receive_sep...) can read more data form sockets,
+ this data are used by ```n_revieve/any_receive/receive_sep```, but they can be read/reseted 
+ whith data_readed getseter.
 
 This primitives are declared in SocketReactive module.
 
