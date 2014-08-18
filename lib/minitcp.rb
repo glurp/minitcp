@@ -55,7 +55,7 @@ module SocketReactive
   rescue Timeout::Error
     return nil
   rescue Exception => e
-    puts  "#{e} :\n  #{e.backtrace.join("\n  ")}"
+    $stdout.puts  "#{e} :\n  #{e.backtrace.join("\n  ")}"
   end
 
   # async wait and read data on socket, yield values readed,
@@ -72,7 +72,7 @@ module SocketReactive
           data && data.size>0 ? yield(data) : break
         end
       rescue Exception => e
-        puts  "#{e} :\n  #{e.backtrace.join("\n  ")}"
+        $stdout.puts  "#{e} :\n  #{e.backtrace.join("\n  ")}"
       end
       close rescue nil
     end
@@ -86,7 +86,7 @@ module SocketReactive
       begin
         receive_n_bytes(sizemax,true,&b)
       rescue Exception => e
-        puts  "#{e} :\n  #{e.backtrace.join("\n  ")}"
+        $stdout.puts  "#{e} :\n  #{e.backtrace.join("\n  ")}"
       end
     end
   end
@@ -136,7 +136,7 @@ module SocketReactive
       begin
         receive_sep(separator,sizemax,looping=true,&b)
       rescue Exception => e
-        puts  "#{e} :\n  #{e.backtrace.join("\n  ")}"
+        $stdout.puts  "#{e} :\n  #{e.backtrace.join("\n  ")}"
       end
     end
   end
@@ -149,7 +149,7 @@ module SocketReactive
         sleep(duration_ms/1000.0)
         yield unless self.connected?()
       rescue Exception => e
-        puts  "#{e} :\n  #{e.backtrace.join("\n  ")}"
+        $stdout.puts  "#{e} :\n  #{e.backtrace.join("\n  ")}"
       end
     end
   end
@@ -166,7 +166,7 @@ module SocketReactive
           self.connected?() ? yield() : break
         end
       rescue Exception => e
-        puts  "#{e} :\n  #{e.backtrace.join("\n  ")}"
+        $stdout.puts  "#{e} :\n  #{e.backtrace.join("\n  ")}"
       end
     }
   end
@@ -206,7 +206,7 @@ class MClient
   # beetwen each reconnections 
   def self.run_continious(host,port,timer_interconnection_ms,&b)
     Thread.new do
-      loop { run_one_shot(host,port,&b).join ; sleep timer_interconnection/1000.0 }
+      loop { run_one_shot(host,port,&b).join ; sleep timer_interconnection_ms/1000.0 }
     end
   end
 
@@ -242,7 +242,6 @@ end
 #
 # MServer( "8080" , "0.0.0.0" ,1) { |socket| loop { p socket.gets} }
 class MServer < GServer
-  include SocketReactive
   def self.service(port,host,max,&b)
     srv=new(port,host,max,&b)
     srv.audit = true
