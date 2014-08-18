@@ -16,34 +16,38 @@ def smess(socket,*args)
     socket.send(data+" "*($SIZE-data.length),0) rescue p $!
 end
 
-MServer.service(4400,"0.0.0.0",100) do |socket| 
-  socket.on_n_receive($SIZE) do |data|
-    ip=socket.remote_address.ip_address
-    cmd,*args=data.split(";")  
-    name=args.first
-    rep=""
-    case cmd
-      when "update"
-        $dico_name[name]=ip
-        $dico_ip[ip]=name
-        rep="OK"
-      when "forget"
-        oldip=$dico_name[ip]
-        if $oldip && $dico_ip[ip]==name && $dico_name[name]==ip
-          $dico_name.delete(name)
-          $dico_ip.delete(ip)
+def run_server_name()
+  MServer.service(4400,"0.0.0.0",100) do |socket| 
+    socket.on_n_receive($SIZE) do |data|
+      ip=socket.remote_address.ip_address
+      cmd,*args=data.split(";")  
+      name=args.first
+      rep=""
+      case cmd
+        when "update"
+          $dico_name[name]=ip
+          $dico_ip[ip]=name
           rep="OK"
-        end
-      when "get"
-        rep=$dico_name[name].to_s
-      when "geti"
-        rep=$dico_ip[name].to_s
+        when "forget"
+          oldip=$dico_ip[ip]
+          if oldip && $dico_ip[ip]==name && $dico_name[name]==ip
+            $dico_name.delete(name)
+            $dico_ip.delete(ip)
+            rep="OK"
+          end
+        when "get"
+          rep=$dico_name[name].to_s
+        when "geti"
+          rep=$dico_ip[name].to_s
+      end
+      rep.size>0  ? smess(socket,"ACK",name,rep) : smess(socket,"NACK","NOK","NOK")
     end
-    rep.size>0  ? smess(socket,"ACK",name,rep) : smess(socket,"NACK","NOK","NOK")
+    socket.after(10*1000) { socket.close rescue nil}
+    socket.wait_end
   end
-  socket.after(10*1000) { socket.close rescue nil}
-  socket.wait_end
 end
+
+################# Client api ########################
 
 def update_server_name(hostname)
   MClient.run_one_shot("localhost",4400) do |socket|
@@ -72,17 +76,27 @@ def fetch_ip(ip)
   end.join
   ret
 end
+def forget_me(name)
+  MClient.run_one_shot("localhost",4400) do |socket|
+    ret="?"
+    socket.on_n_receive($SIZE) { |data| ret= data.split(";")[2] ; socket.close  }
+    smess(socket,"forget",name)
+    socket.wait_end
+    p "forget : #{ret}"
+  end.join
+end
 
 if $0==__FILE__
-
+  run_server_name
   
   Thread.new { 4.times { update_server_name("glurp") ; sleep 1 } }
   Thread.new { 4.times { update_server_name("glurp22") ; sleep 1 } }
 
-  sleep 4
+  sleep 2
   puts "\n\n***************** get name *******************\n\n"
 
   p fetch_name("glurp")
   p fetch_ip("127.0.0.1")
+  forget_me("glurp22")
   sleep
 end
