@@ -1,4 +1,6 @@
-0.5.1
+0.5.2
+    plot.rb : interaction with mouse
+    name_server.rb : forget debug
 0.5.0 : 2014-08-18 16:39:35 +0200
 0.4.0 : 2014-08-18 16:37:12 +0200
     minitcp.rb : error on stdout for SocketReactive
