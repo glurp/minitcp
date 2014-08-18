@@ -97,13 +97,13 @@ TODO
 
 Tests case
 ==
-A proxy,debug tool (see samples/proxy.rb) :
+A TCP proxy, debug tool (see samples/proxy.rb) :
 
 ```ruby
 MServer.service(2200,"0.0.0.0",22) do |scli|
   px 2, "======== client Connected ========"
   srv=MClient.run_one_shot("ip",2200) do |ssrv|
-     px 1, "======== server Concected ========"
+     px 1, "======== server Connected ========"
      ssrv.on_any_receive { |data| px 1,data; scli.print data }
      scli.on_any_receive { |data| px 2,data; ssrv.print data}
      ssrv.wait_end
