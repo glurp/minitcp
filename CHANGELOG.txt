@@ -1,4 +1,6 @@
-0.3.3
+0.3.4
+    minitcp.rb : comments
+    README.md : presentations, format
     proxy.rb : prefix correction
     README.md : proxy correction
     README.md : todo, presentation
