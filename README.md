@@ -38,6 +38,7 @@ srv=MServer.service(2200,"0.0.0.0",22) do |socket|
   socket.wait_end
 end
 ```
+Docs: http://rubydoc.info/gems/minitcp
 
 
 Client
