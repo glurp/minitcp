@@ -1,4 +1,6 @@
-0.3.7
+0.5.1
+0.5.0 : 2014-08-18 16:39:35 +0200
+0.4.0 : 2014-08-18 16:37:12 +0200
     minitcp.rb : error on stdout for SocketReactive
     README.md : typo
     README.md : sockets presentation
