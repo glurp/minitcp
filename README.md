@@ -7,10 +7,11 @@ Presentation
 A little tool for doing some TCP sockets communications.
 
 This tool have no pretention : it is not EventMachine ! : 
+
 * no mainloop, 
 * many threads are created/deleted.
 * it is useful for send some data one shot, test a ascii communication in few minutes...
-* should be equivalent to netcat+bash :)
+* should be equivalent to netcat+bash ...
 
 
 A  TCP client :
@@ -46,7 +47,8 @@ Client
 MClient.run_one_shot(host,port) do |socket| ... end
 MClient.run_continous(host,port,time_inter_connection) do |socket| ... end
 ```
-Client socket is extended with all specifiques commandes (handler...).
+
+Client socket is extended with all specifiques commandes (see Sockets).
 
 Server
 ==
@@ -63,16 +65,20 @@ Sockets
 Handlers are disponibles for any sockets : client or server. 
 All handler's bloc run in distinct thread : so any handler-bloc can wait anything.
 if socket is closed, handler/thread are cleanly (?) stoped.
+
 * socket.**on_any_receive() {|data| ...}**          : on receive some data, any size
 * socket.**on_n_receive(sizemax=1) {|data| ...}**   : receives n byte(s) only
 * socket.**on_receive_sep(";") {|field | ... }**    : reveive data until string separator
 * socket.**on_timer(value_ms) { ... }**             : each time do something, if socket is open
 * socket.**after(duration) { ... }**    : do something after n millisecondes, if socket is open
 
-some primitives are here for help (no thread):
+Some primitives are here for help (no thread):
+
 * **received_timeout(sizemax,timeout)** : wait for n bytes, with timeout, (blocking caller)
 * **wait_end()**                        : wait, (blocking caller) until socket is close. this
   work only if something has closed the socket.this is possible unicly by receiving 0 bte on a socket reading.
+
+This primitives are declared in SocketReactive module.
 
 TODO
 ==
