@@ -54,9 +54,12 @@ end
 
 Ruiby.app width: W, height: H, title: "Curve" do
 	stack do
-		@cv=canvas(W,H) { on_canvas_draw { |w,ctx| expose(w,ctx) } }
+		@cv=canvas(W,H) do
+			on_canvas_draw { |w,ctx| expose(w,ctx) } 
+			on_canvas_button_press{ |w,e| alert("kp");  system("lxterminal", "-c", "htop") }
+        end		
 	end
-
+	@cv.signal("")
 	rposition(1,1)
 	after(4*1000) { chrome(false); move(-1,-20) }
 	Thread.new(self) { |app| sleep(1) ; loop { run(app) } }
