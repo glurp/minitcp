@@ -22,51 +22,63 @@ $fgcolor=[
 class Measure
 	class << self
 		def create(argv)
+			noc=argv.shift.to_i
+			y0=(argv.shift||"0.0").to_f
+			y1=(argv.shift||"100.0").to_f
+			label=argv.shift||"?"
+			autoscale=argv.size>0
 			@lcurve||=[]
-			@lcurve << Measure.new(argv)
+			@lcurve << Measure.new(noc,y0,y1,label,autoscale)
+			@lcurve.size-1
+		end
+		def add(noc,y0,y1,label,autoscale)
+			@lcurve << Measure.new(noc,y0,y1,label,autoscale)
+			@lcurve.size-1
 		end
 		def scan_line(line)
 			nums=line.scan(/[\d+.]+/)
 			@lcurve.each { |m| m.register_value(nums) }
+		end
+		def add_value(index,value)
+			@lcurve[index].register_value(value)
 		end
 		def draw_measures(ctx)
 			@lcurve.each_with_index { |m,index| m.plot_curve(index,ctx) }
 			@lcurve.each_with_index { |m,index| m.plot_label(index,ctx) }
 		end
 	end
-	def initialize(argv)
-		a=argv.clone
-	  @noc=argv.shift.to_i
-	  y0=(argv.shift||"0.0").to_f
-	  y1=(argv.shift||"100.0").to_f
-	  @div,@offset=calc_coef(y0,0.0,y1,1.0)
-	  @name=argv.shift||"?"
+	def initialize(noc,min,max,label,auto_scale)
+	  @noc=noc
+	  @div,@offset=calc_coef(min,0.0,max,1.0)
+	  @name=label
 	  @value= 0
 	  @curve=[]
 	  @label=@name
-	  @autoscale=argv.size>0
-	  p [a,self]
+	  @autoscale=auto_scale
 	end
-	def register_value(lfields)
-		svalue=lfields[@noc]
-		return if !svalue || svalue !~ /[\d.]+/
-
-		@value=svalue.to_f
+	def register_value(data)
+		if data.is_a? Array
+			svalue=data[@noc]
+			return if !svalue || svalue !~ /[\d.]+/
+			@value=svalue.to_f
+		else
+			@value=data
+		end
 		@label = "%s %5.2f" % [@name,@value]
 		v= @value * @div + @offset
 		py=[0.0,(H-HHEAD)*1.0,(H-HHEAD)*(1.0-v)].sort[1]+HHEAD
 		@curve << [W+PAS,py,v,@value]
 		@curve.select! {|pt| pt[0]-=PAS; pt[0]>=0}
 	    p [i,@value,v,py] if $DEBUG
-	    auto_scale if @curve.size>5
+	    auto_scale if @autoscale && @curve.size>5
 	end
 	def auto_scale()
 		min,max=@curve.minmax_by {|pt| pt[2]}
-		if min!=max && (min[2]<-0.1 || max[2]>1.01)
+		if min!=max && (min[2]<-0.01 || max[2]>1.01)
 		   p "correction1 #{@name} #{min} // #{max}"
 		   @div,@offset=calc_coef(min[3],0.0,max[3],1.0)
 		   @curve.each {|a| a[2]=a[3]*@div+@offset ; a[1] = (H-HHEAD)*(1-a[2])}
-		elsif (d=(max[2]-min[2]))< 0.1 && (@curve.size-1) >= W/PAS && min!=max
+		elsif (d=(max[2]-min[2]))< 0.1 && (@curve.size-1) >= W/PAS && d>0.0001
 		   p "correction2 #{@name} #{min} // #{max}"
 		   @div,@offset=calc_coef(min[3],min[2]-3*d,max[3],max[2]+3*d)
 		   @curve.each {|a| a[2]=a[3]*@div+@offset ; a[1] = (H-HHEAD)*(1.0-a[2])}			
@@ -113,60 +125,66 @@ def run(app)
 	end
 end
 
-############################### Main #################################
+def run_window()
+	Ruiby.app width: W, height: H, title: "Curve" do
+		stack do
+			@cv=canvas(W,H) do
+				on_canvas_draw { |w,ctx| expose(w,ctx) } 
+	        end		
+			popup(@cv) do
+				pp_item(" Plot ")	{  }
+				pp_separator
+				pp_item("htop") { system("lxterminal", "-e", "htop") }
+				pp_item("Gnome Monitor") { Process.spawn("gnome-system-monitor") }
+				pp_item("Terminal") { system("lxterminal") }
+				pp_separator
+				pp_item("Exit")	{ ask("Exit ?") && exit(0) }
+			end
+		end
+		chrome(false)
+		move($posxy[0],$posxy[1])
+	    @ow,@oh=size
+		def expose(cv,ctx)
+			ctx.set_source_rgba($bgcolor.red/65000.0, $bgcolor.green/65000.0, $bgcolor.blue/65000.0, 1)
+			ctx.rectangle(0,0,W,H)
+			ctx.fill()
+			ctx.set_source_rgba($bgcolor.red/65000.0, $bgcolor.green/65000.0, 05+$bgcolor.blue/65000.0, 0.3)
+			ctx.rectangle(0,0,W,HHEAD)
+			ctx.fill()		
+			Measure.draw_measures(ctx)
+			(puts "source modified!!!";exit!(0)) if File.mtime(__FILE__)!=$mtime 
+		end
+		$mtime=File.mtime(__FILE__)
 
-trap("TERM") { exit!(0) }
-
-PAS=2
-HHEAD=20
-$posxy=[0,0]
-
-if  ARGV.size>=2 && ARGV[0]=="--pos"
-  _,posxy=ARGV.shift,ARGV.shift
-  $posxy=posxy.split(/[x,:]/).map(&:to_i)
-end  
-if  ARGV.size>=2 && ARGV[0]=="--dim"
-  _,geom=ARGV.shift,ARGV.shift
-  W,H=geom.split(/[x,:]/).map(&:to_i)
-else
-	W,H=200,100
-end  
-
-while ARGV.size>0
-  argv=[]
-  argv << ARGV.shift  while ARGV.size>0 && ARGV.first!="--"
-  Measure.create(argv)
-  ARGV.shift if ARGV.size>0 && ARGV.first=="--"
+		Thread.new(self) { |app|  loop { run(app) } }
+	end
 end
 
-Ruiby.app width: W, height: H, title: "Curve" do
-	stack do
-		@cv=canvas(W,H) do
-			on_canvas_draw { |w,ctx| expose(w,ctx) } 
-			on_canvas_button_press do |w,e| 
-				case e.button 
-					when 1 then system("lxterminal", "-e", "htop") 
-					when 3 then Process.spawn("gnome-system-monitor") 
-					when 2 then ask("Exit ?") && exit(0) 
-				end
-			end
+############################### Main #################################
 
-        end		
-	end
-	chrome(false)
-	move($posxy[0],$posxy[1])
-    @ow,@oh=size
-	def expose(cv,ctx)
-		ctx.set_source_rgba($bgcolor.red/65000.0, $bgcolor.green/65000.0, $bgcolor.blue/65000.0, 1)
-		ctx.rectangle(0,0,W,H)
-		ctx.fill()
-		ctx.set_source_rgba($bgcolor.red/65000.0, $bgcolor.green/65000.0, 05+$bgcolor.blue/65000.0, 0.3)
-		ctx.rectangle(0,0,W,HHEAD)
-		ctx.fill()		
-		Measure.draw_measures(ctx)
-		(puts "source modified!!!";exit!(0)) if File.mtime(__FILE__)!=$mtime 
-	end
-	$mtime=File.mtime(__FILE__)
+if $0==__FILE__
+	trap("TERM") { exit!(0) }
 
-	Thread.new(self) { |app|  loop { run(app) } }
+	PAS=2
+	HHEAD=20
+	$posxy=[0,0]
+
+	if  ARGV.size>=2 && ARGV[0]=="--pos"
+	  _,posxy=ARGV.shift,ARGV.shift
+	  $posxy=posxy.split(/[x,:]/).map(&:to_i)
+	end  
+	if  ARGV.size>=2 && ARGV[0]=="--dim"
+	  _,geom=ARGV.shift,ARGV.shift
+	  W,H=geom.split(/[x,:]/).map(&:to_i)
+	else
+		W,H=200,100
+	end  
+
+	while ARGV.size>0
+	  argv=[]
+	  argv << ARGV.shift  while ARGV.size>0 && ARGV.first!="--"
+	  Measure.create(argv)
+	  ARGV.shift if ARGV.size>0 && ARGV.first=="--"
+	end
+	run_window
 end
