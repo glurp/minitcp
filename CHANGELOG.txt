@@ -1,4 +1,7 @@
-0.5.3
+0.5.4
+    README.md : todo
+    plot.rb : auto-scale
+    name_server.rb : creation
     plot.rb : color
     plot.rb : interaction with mouse
     name_server.rb : forget debug
