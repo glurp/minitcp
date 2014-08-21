@@ -1,4 +1,7 @@
-0.5.4
+0.6.1
+    plot.rb : refactoring Measure.class
+    pingpongplot.rb : temporisation
+0.6.0 : 2014-08-21 11:06:44 +0200
     README.md : todo
     plot.rb : auto-scale
     name_server.rb : creation
