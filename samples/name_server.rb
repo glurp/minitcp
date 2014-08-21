@@ -11,6 +11,35 @@ $SIZE=30
 $dico_name={}
 $dico_ip={}
 
+def run_net_relay()
+  MServer.service(4410,"0.0.0.0",1000) do |socket| 
+    socket.on_n_receive($SIZE) do |data|
+      ip=socket.remote_address.ip_address
+      cmd,url,http=data.split(' ')  
+      name,method,*args=url.split('/').last
+      next if cmd!="GET"  
+      case method
+      when "server"
+        old=ActiveConnection.search(name)
+        if old && old.state==:free
+           old.deconnect
+           old=nil
+        end
+        if !old || old.state==:connected
+          ActiveConnection.add(socket)
+        end
+      when "client"
+        if srv=ActiveConnection.search(args.first)
+          srv.connect_to(name)
+        else
+          smess("NOTCONNECT")
+        end
+      end
+      rep=""
+    end
+  end
+end
+
 def smess(socket,*args)
     data=  args.join(";")+";"
     socket.send(data+" "*($SIZE-data.length),0) rescue p $!
