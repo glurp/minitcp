@@ -90,10 +90,11 @@ TODO
 ==
 
 * UDP, Multicast
-* encoding : actualy, minitcp read BINASCII encoding, notinh is done for other form,
+* encoding : actualy, minitcp read BINASCII encoding, nothing is done for other form,
 * more socket primitive
 * less thread, better performance, :)
-* rewriting for mainloop environement : gtk, qt, EM ...
+* rewriting for mainloop environement : gtk, qt,  ...
+* killer application demo :)
 
 Tests case
 ==
@@ -122,6 +123,7 @@ end
 
 
 Test serial **protocole-like** : header/body => ack/timeout:
+
 * client send <length><data> , wait one char ackit or timeout
 * serveur receive heade( size: 4 chars) , then data with maxsize, send ack
 
