@@ -46,7 +46,7 @@ Client
 
 ```
 MClient.run_one_shot(host,port) do |socket| ... end
-MClient.run_continous(host,port,time_inter_connection) do |socket| ... end
+MClient.run_continious(host,port,time_inter_connection) do |socket| ... end
 ```
 
 Client socket is extended with all specifiques commandes (see Sockets).
