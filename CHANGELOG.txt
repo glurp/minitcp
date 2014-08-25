@@ -1,3 +1,5 @@
+0.6.2
+    README.md : continious
 0.6.1
     plot.rb : refactoring Measure.class
     pingpongplot.rb : temporisation
