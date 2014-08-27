@@ -1,4 +1,7 @@
-0.6.3
+0.6.4
+    statcpu.rb : windows version, not finish...
+    README.md : spdy start demo
+    README.md : best code example
     README.md : presentation
     README.md : continious
 0.6.1
