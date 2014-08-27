@@ -7,6 +7,8 @@ Minitcp usages
 
 **relay.rb**			:	not ready , tcp relay for bypass firewall/proxy protection
 
+*spdy.rb**				:	SPDY server relay for http server
+
 Dynamic ploting
 ===
 
