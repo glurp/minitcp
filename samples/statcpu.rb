@@ -1,6 +1,13 @@
 # LGPL
 # ruby b.rb  0.2  3 | ruby plot.rb --pos 300,0  0 -0.01 1 cpu
 
+if File.exists?("c:/windows")
+	require 'ruby-wmi'
+
+	puts "Not implemented for Windows !!!"
+	exit(0)
+else
+
 def get_nbcpu()
 	stat = Hash[*(IO.read("/proc/stat").split("\n").map {|line| line.chomp.split(/\s+/,2)}.flatten)]
 	stat.keys.grep(/^cpu(\d+)/).size
@@ -27,3 +34,4 @@ loop {
 	    }
 		sleep periode
 }
+end
