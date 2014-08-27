@@ -10,7 +10,7 @@ This tool have no pretention : it is not EventMachine ! :
 
 * no mainloop, 
 * many threads are created/deleted.
-* it is useful for send some data one shot, test a ascii communication in few minutes...
+* it is useful for send some data one-shot, test a ascii communication in few minutes...
 * should be equivalent to netcat+bash ...
 
 
@@ -27,12 +27,8 @@ An echo server :
 
 ```ruby
 srv=MServer.service(2200,"0.0.0.0",22) do |socket|
-  socket.on_any_receive do |data| 
-    puts "  Server recieved: #{data.inspect}" 
-    socket.print(data)
-  end
+  socket.on_any_receive { |data|  socket.print(data) }
   socket.on_timer(2000) do
-    socket.puts "I am tired!!" 
     socket.close
   end
   socket.wait_end
@@ -49,7 +45,7 @@ MClient.run_one_shot(host,port) do |socket| ... end
 MClient.run_continious(host,port,time_inter_connection) do |socket| ... end
 ```
 
-Client socket is extended with all specifiques commandes (see Sockets).
+Client socket is extended with all specifiques commandes (```SocketReactive```, see Sockets).
 
 Server
 ==
@@ -58,7 +54,7 @@ Server
 srv=MServer.service(port,"0.0.0.0",max_client) do |socket| ... end
 ```
 Mserver run a GServer. 
-connected sockets are extended with same module as in client.
+Connected sockets are extended with same module as in client.
 
 Sockets
 ==
@@ -89,11 +85,8 @@ This primitives are declared in SocketReactive module.
 TODO
 ==
 
-* UDP, Multicast
-* encoding : actualy, minitcp read BINASCII encoding, nothing is done for other form,
+* UDP, Multicast, Serial line
 * more socket primitive
-* less thread, better performance, :)
-* rewriting for mainloop environement : gtk, qt,  ...
 * killer application demo :)
 
 Tests case
@@ -124,8 +117,8 @@ end
 
 Test serial **protocole-like** : header/body => ack/timeout:
 
-* client send <length><data> , wait one char ackit or timeout
-* serveur receive heade( size: 4 chars) , then data with maxsize, send ack
+* client send <length><data> , wait one char acquit or timeout
+* serveur receive heade( size: 4 chars) , then data with size, send ack
 
 
 ```ruby
