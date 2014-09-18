@@ -4,7 +4,7 @@ Minitcp
 Presentation
 ==
 
-A little tool for doing some TCP sockets communications.
+A little tool for doing some TCP/UDP sockets communications.
 
 This tool have no pretention : it is not EventMachine ! : 
 
@@ -34,8 +34,39 @@ srv=MServer.service(2200,"0.0.0.0",22) do |socket|
   socket.wait_end
 end
 ```
+
+A UDP server
+
+```ruby
+	UDPAgent.on_datagramme("127.0.0.2",SRV_PORT ) { |data,from,p| 
+	  puts "Agent: received #{data} from #{from}:#{p}" 
+	  data && data.size>3 ? "OK-#{data}." : nil
+	}
+```
+
+A UDP sender
+
+```ruby
+	UDPAgent.on_timer(1000, 
+		port: 2232,
+		on_timer: proc do
+		  data=Time.now.to_i.to_s
+		  puts "\n\n\non timer send <#{data}>"
+		  {mess: data,host: "127.0.0.2",port: SRV_PORT}
+		end,
+		on_receive: proc { |data,from,sock| 
+		  puts "Client: received #{data} from #{from}"  
+		  UDPAgent.send_datagram_on_socket(sock,from.last,from[1],'ack')
+		}
+	)
+```
+
+
 Docs: http://rubydoc.info/gems/minitcp
 
+
+TCP
+===
 
 Client
 ==
@@ -82,12 +113,26 @@ Some primitives are here for help (no thread):
 
 This primitives are declared in SocketReactive module.
 
+UDP
+===
+
+2 type of agents : 
+
+* **Server** : receive data from anywhere, can reply to sender
+* **Timer**  : emit to everybody, can receive response from them
+
+3 primiitves :
+
+* **send_datagram(host,port,message)** : create a socket, send mesage and close socket (ca'nt receive a reply)
+* **send_datagram_on_socket(socket,host,port,message)** : use existant socket for send a message to ip:port
+
+
 TODO
 ==
 
-* UDP, Multicast, Serial line
+* Serial line
 * more socket primitive
-* killer application demo :)
+
 
 Tests case
 ==
