@@ -69,7 +69,7 @@ TCP
 ===
 
 Client
-=
+---
 
 ```
 MClient.run_one_shot(host,port) do |socket| ... end
@@ -79,7 +79,7 @@ MClient.run_continious(host,port,time_inter_connection) do |socket| ... end
 Client socket is extended with all specifiques commandes (```SocketReactive```, see Sockets).
 
 Server
-=
+---
 
 ```ruby
 srv=MServer.service(port,"0.0.0.0",max_client) do |socket| ... end
@@ -88,7 +88,7 @@ Mserver run a GServer.
 Connected sockets are extended with same module as in client.
 
 Sockets
-=
+---
 
 Handlers are disponibles for any sockets : client or server. 
 All handler's bloc run in distinct thread : so any handler-bloc can wait anything.
