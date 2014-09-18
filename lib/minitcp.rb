@@ -237,6 +237,72 @@ class MClient
   end
 end
 
+
+# Assure connection to server, extend socket connection by SocketReactive module.
+#
+#	MClient.run_one_shot("localhost",2200)       do |socket| .. end.join
+#
+#	MClient.run_continous("localhost",2200,6000) do |socket| .. end.join
+#
+class UDPAgent
+  # maintain a conntection to a TCP serveur, sleep timer_interconnection_ms millisecondes
+  # beetwen each reconnections 
+  def self.send_datagram(host,port,mess)
+        sock = UDPSocket.new
+        #p ["sock.send",mess, 0, host, port]
+        sock.send(mess, 0, host, port)
+        sock.close
+  end
+  def self.send_datagram_on_socket(socket,host,port,mess)
+        socket.send(mess, 0, host, port)
+  end
+
+  Thread.abort_on_exception=true
+
+  # send datagram on timer
+  def self.on_timer(periode,options)
+    Thread.new do 
+      sleep periode/1000.0
+      sock = UDPSocket.new
+      if options[:port]
+        sock.bind("0.0.0.0", options[:port])
+      end
+      loop do
+        rep=IO.select([sock],nil,nil,periode/1000.0)
+        #puts  "IO.SELECT => #{rep}"
+        if rep
+          Thread.new {
+               data,peer=sock.recvfrom(1024)
+               options[:on_receive].call(data,peer,sock)
+          } if options[:on_receive]
+        elsif options[:on_timer]
+          h=options[:on_timer].call()
+          self.send_datagram_on_socket(sock,h[:host], h[:port],h[:mess]) if h && h[:mess] && h[:host] && h[:port]
+        end
+      end
+    end
+  end
+  # recieved UDP datagramme, bloc can ellaborate a reply, which will be sending to client
+  def self.on_datagramme(host,port)
+    serv = UDPSocket.new
+    serv.bind(host, port)
+    Thread.new do
+      loop do
+        begin
+        Thread.new(*serv.recvfrom(1024)) do |data,peer|  # peer=["AF_INET", 59340, "127.0.0.1", "127.0.0.1"]
+            proto,cli_port,srv_addr,cli_addr=*peer
+            response=yield(data,cli_addr,cli_port)
+            self.send_datagram_on_socket(serv,cli_addr,cli_port,response) if response
+        end
+        rescue Exception => e
+          puts "#{e}\n  #{e.backtrace.join("\n  ")}"
+        ensure
+        end
+      end
+    end
+  end
+end
+
 # Run a TCP serveur, with a max connection simultaneous,
 # When connection succes, call the bloc given with socket (extended by SocketReactive).
 #
