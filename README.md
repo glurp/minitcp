@@ -35,7 +35,7 @@ srv=MServer.service(2200,"0.0.0.0",22) do |socket|
 end
 ```
 
-A UDP server
+A UDP server :
 
 ```ruby
 	UDPAgent.on_datagramme("127.0.0.2",SRV_PORT ) { |data,from,p| 
@@ -44,7 +44,7 @@ A UDP server
 	}
 ```
 
-A UDP sender
+A UDP sender :
 
 ```ruby
 	UDPAgent.on_timer(1000, 
@@ -119,9 +119,9 @@ UDP
 2 type of agents : 
 
 * **Server** : receive data from anywhere, can reply to sender
-* **Timer**  : emit to everybody, can receive response from them
+* **Timer**  : emit to everybody, can receive response to them
 
-3 primiitves :
+2 primitives :
 
 * **send_datagram(host,port,message)** : create a socket, send mesage and close socket (ca'nt receive a reply)
 * **send_datagram_on_socket(socket,host,port,message)** : use existant socket for send a message to ip:port
