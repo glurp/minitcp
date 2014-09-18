@@ -160,5 +160,33 @@ if ARGV.size==0 || ARGV[0]=="4"
   puts "Tread list : #{Thread.list} / current= #{Thread.current.inspect}"
 end
 
-puts "Test End !"
 
+if ARGV.size==0 || ARGV[0]=="5"
+  SRV_PORT=2234
+  ## ############################# Client UDP : send datagram to anybody, serv response from them
+  
+  UDPAgent.on_timer(1000, 
+    port: 2232,
+    on_timer: proc do
+      data=Time.now.to_i.to_s
+      puts "\n\n\non timer send <#{data}>"
+      {mess: data,host: "127.0.0.2",port: SRV_PORT}
+    end,
+    on_receive: proc { |data,from,sock| 
+      puts "Client: received #{data} from #{from}"  
+      UDPAgent.send_datagram_on_socket(sock,from.last,from[1],'ack')
+    }
+  )
+  
+  ## ############################# Server UDP : receive datagrram from anybody, response to sender
+  
+  UDPAgent.on_datagramme("127.0.0.2",SRV_PORT ) { |data,from,p| 
+    puts "Agent: received #{data} from #{from}:#{p}" 
+    data && data.size>3 ? "OK-#{data}." : nil
+  }
+  sleep 1
+  UDPAgent.send_datagram("127.0.0.2",SRV_PORT,"Hello")
+  sleep 10
+end
+
+puts "Test End !"
