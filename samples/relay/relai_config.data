@@ -1,0 +1,4 @@
+{
+"TOTO" => ["localhost",7708,""],
+"TITI" => ["localhost",80,"/"]
+} 
