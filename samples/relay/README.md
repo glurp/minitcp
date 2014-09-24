@@ -44,11 +44,20 @@ occp plugin is the first plugin used :
 Usage
 =====
 Extranet:
+
+```
     >  ruby relaiproxy.rb  proxyhttp  proxy-hostname proxy-port
+```
 
 Intranet:
+
+```
     > vi relai_config.rb
+```
+    
+```
     >  ruby relaiproxy.rb  relai      proxy-ip  proxy-port  plugin-name
+```
 
 (actualy 'ocpp' is only plugin disponible)
 
