@@ -160,8 +160,7 @@ task :commit => [:pre_commit,"commit_status",:post_commit]
 #  gem build & push
 #############################################################
 desc "make a gem and push it to gemcutter"
-task :gem => :commit do
-  sh "git push"
+task :gem  do
   $version=change_version { |a| 
       a[-2]=(a[-2].to_i+1) 
       a[-1]=0 
