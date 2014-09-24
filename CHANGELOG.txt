@@ -1,4 +1,3 @@
-0.10.3
     README.md : ocpp
     README.md : plugin doc
     Rakefile.rb : version management
