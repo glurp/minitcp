@@ -27,12 +27,13 @@ module SocketReactive
     end
     s=sizemax-self.data_readed.size
     loop do
+      #p ["waiting ",s,data_readed]
       sd=s>1024 ? 1024 : s
       data=(self.recv(sd) rescue nil)
-      #p "nrec: w#{sizemax}/ rec:#{data.size} / #{sd} old=#{data_readed.size} /// #{data.size<70 ? data: "."}"
+      #p "nrec: w#{sizemax}/ rec:#{(data||'').size} / #{sd} old=#{data_readed.size} /// #{(data||'').size<70 ? data : "."}"
       if data && data.size>0
         self.data_readed=self.data_readed+data
-        s-=data.size
+        s=sizemax-self.data_readed.size
         if s<=0
           buff,self.data_readed=self.data_readed,""
           s=sizemax
@@ -47,10 +48,20 @@ module SocketReactive
   end
   # wait n byte or timeout. if block is defined, it is yielded with data
   # return nil if timeout/socket closed, or data if no bloc, or yield value
-  def received_timeout(sizemax,timeout_ms,&b)
+  def received_n_timeout(sizemax,timeout_ms,&b)
     timeout(timeout_ms/1000.0) {
       ret=receive_n_bytes(sizemax,false,&b)
       return ret
+    }
+  rescue Timeout::Error
+    return nil
+  rescue Exception => e
+    $stdout.puts  "#{e} :\n  #{e.backtrace.join("\n  ")}"
+  end
+  
+  def received_any_timeout(sizemax,timeout_ms)
+    timeout(timeout_ms/1000.0) {
+      return recv(sizemax)
     }
   rescue Timeout::Error
     return nil
