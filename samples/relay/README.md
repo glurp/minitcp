@@ -30,17 +30,16 @@ Plugin
 ======
 
 Relai receive http request for an intranet server. 
-Plugiin must be writing for find ip:port/path  for the host target.
+Plugin must be writing for find ip:port/path  for the host target.
 this can varying with http-subprotocole used.
 
 occp plugin is the first plugin used :
-* requests servied by this plugin are SOAP, header contain a field 
-```<ChargeBoxId>name-equipment</ChargeBoxId>```
+* requests servied by this plugin are SOAP, header contain a field  ```<ChargeBoxId>name-equipment</ChargeBoxId>```
 * a local config file give url for each id
-* the plugin do :
-  - parse the request for finding the value of ChargeBixIs (regexp)
-  - find ip:port/path for the itranet-server adressed
-  - modify the path in the GET http command
+* the plugin will :
+- parse the request for finding the value of ChargeBixIs (regexp)
+- find ip:port/path for the itranet-server adressed
+- modify the path in the GET http command
 
 Usage
 =====
@@ -51,6 +50,6 @@ Intranet:
     > vi relai_config.rb
     >  ruby relaiproxy.rb  relai      proxy-ip  proxy-port  plugin-name
 
-(actualy ocpp is the plugin)
+(actualy 'ocpp' is only plugin disponible)
 
 
