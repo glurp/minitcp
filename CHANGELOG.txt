@@ -1,3 +1,6 @@
+0.10.4
+    plot.rb : gdraw grid
+    pingpongplot.rb : flush stdout
     README.md : ocpp
     README.md : plugin doc
     Rakefile.rb : version management

@@ -2,16 +2,26 @@
 ###############################################################
 # plot.rb plot data(s) of stdin to Gui display
 # Usage:
-#  > vmstat 1 | ruby  plot.rb -2 0-value 100%-value cpu --  10  0 5000 io auto
-#                             ^input-column         ^label  ^in-column .. ^auto-scale
+#  > data-generator | \n
+#          ruby  plot.rb -2 0value 100%value cpu --  10  0 5000 io auto
+#                        ^input-column       ^label  ^in-column .. ^auto-scale
 #      
+#  > vmstat 1 | ruby plot.rb  10  0 500  io auto -- -3 100 0 cpu 
+#                             ^columne 10
+#                                                   ^columne end-3 (cpu idle)
+#                                                      ^ min..max=100..0 (inverse)
+#
+#  > ruby -e '$stdout.sync=true;a=50;loop {a+=rand(-1..+1);puts a.to_s;sleep 0.05}' \n
+#      | ruby plot.rb --pos 0x200 --dim 400x100 0 0 100 alea auto
 ###############################################################
 
 require 'Ruiby'
 $bgcolor=::Gdk::Color.parse("#023")
+$axecolor=::Gdk::Color.parse("#AA8888")
+$axeopacity=1
 $fgcolor=[
-	::Gdk::Color.parse("#FFAA00"),
 	::Gdk::Color.parse("#99DDFF"),
+	::Gdk::Color.parse("#FFAA00"),
 	::Gdk::Color.parse("#00FF00"),
 	::Gdk::Color.parse("#0000FF"),
 	::Gdk::Color.parse("#FFFF00"),
@@ -69,17 +79,17 @@ class Measure
 		py=[0.0,(H-HHEAD)*1.0,(H-HHEAD)*(1.0-v)].sort[1]+HHEAD
 		@curve << [W+PAS,py,v,@value]
 		@curve.select! {|pt| pt[0]-=PAS; pt[0]>=0}
-	    p [i,@value,v,py] if $DEBUG
+	    p [@value,v,py] if $DEBUG
 	    auto_scale if @autoscale && @curve.size>5
 	end
 	def auto_scale()
 		min,max=@curve.minmax_by {|pt| pt[2]}
 		if min!=max && (min[2]<-0.01 || max[2]>1.01)
-		   p "correction1 #{@name} #{min} // #{max}"
+		   #p "correction1 #{@name} #{min} // #{max}"
 		   @div,@offset=calc_coef(min[3],0.0,max[3],1.0)
 		   @curve.each {|a| a[2]=a[3]*@div+@offset ; a[1] = (H-HHEAD)*(1-a[2])}
-		elsif (d=(max[2]-min[2]))< 0.1 && (@curve.size-1) >= W/PAS && d>0.0001
-		   p "correction2 #{@name} #{min} // #{max}"
+		elsif (d=(max[2]-min[2]).abs)< 0.3 && (@curve.size-1) >= W/PAS && d>0.0001
+		   #p "correction2 #{@name} #{min} // #{max}"
 		   @div,@offset=calc_coef(min[3],min[2]-3*d,max[3],max[2]+3*d)
 		   @curve.each {|a| a[2]=a[3]*@div+@offset ; a[1] = (H-HHEAD)*(1.0-a[2])}			
 		end
@@ -88,8 +98,8 @@ class Measure
 		y0=[0.0,1.0,y0].sort[1]
 		y1=[0.0,1.0,y1].sort[1]
 		a=1.0*(y0-y1)/(x0-x1)
-        b= (y0+y1-(x0+x1)*a)/2
-        [a,b]
+    b= (y0+y1-(x0+x1)*a)/2
+    [a,b]
 	end
 	def plot_curve(index,ctx)
 		return if @curve.size<2
@@ -145,15 +155,31 @@ def run_window()
 		move($posxy[0],$posxy[1])
 	    @ow,@oh=size
 		def expose(cv,ctx)
+      draw_background(ctx)
+      draw_axes(ctx)
+			Measure.draw_measures(ctx)
+			(puts "source modified!!!";exit!(0)) if File.mtime(__FILE__)!=$mtime 
+    rescue
+     puts "#{$!}:\n  #{$!.backtrace().join("\n  ")}"
+		end
+    def draw_background(ctx)
 			ctx.set_source_rgba($bgcolor.red/65000.0, $bgcolor.green/65000.0, $bgcolor.blue/65000.0, 1)
 			ctx.rectangle(0,0,W,H)
 			ctx.fill()
 			ctx.set_source_rgba($bgcolor.red/65000.0, $bgcolor.green/65000.0, 05+$bgcolor.blue/65000.0, 0.3)
 			ctx.rectangle(0,0,W,HHEAD)
 			ctx.fill()		
-			Measure.draw_measures(ctx)
-			(puts "source modified!!!";exit!(0)) if File.mtime(__FILE__)!=$mtime 
-		end
+    end
+    def draw_axes(ctx)
+			HHEAD.step(H,(H-HHEAD)/4)  { |h| line(ctx,0,h,    W,h,$axecolor,$axeopacity,1) }
+			0.step(W,W/8)              { |w| line(ctx,w,HHEAD,w,H,$axecolor,$axeopacity,1) }
+			ctx.stroke()
+    end
+    def line(ctx,x0,y0,x1,y1,color,opacity,width)
+			ctx.set_source_rgba(color.red/65000.0, color.green/65000.0, color.blue/65000.0, opacity)
+		  ctx.set_line_width(width)
+      ctx.move_to(x0,y0) ; ctx.line_to(x1,y1) ;ctx.stroke;
+    end
 		$mtime=File.mtime(__FILE__)
 
 		Thread.new(self) { |app|  loop { run(app) } }
@@ -161,6 +187,8 @@ def run_window()
 end
 
 ############################### Main #################################
+
+#Thread.new { sleep 50 ; exit!(0) }
 
 if $0==__FILE__
 	trap("TERM") { exit!(0) }
