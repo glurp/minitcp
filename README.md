@@ -71,7 +71,7 @@ MClientAgent.run("localhost",2222) do |chan|
 	chan.close
 	nil
   end
-  chan.on_timeput(10_000) { p "timeout" ; chan.close rescue nil }
+  chan.on_timeout(10_000) { p "timeout" ; chan.close rescue nil }
   chan.wait_end
 end
 ```
