@@ -42,7 +42,7 @@ if  ARGV.size==0 || ARGV[0]=="2"
       (socket.close; next) if s!="e"
       size=data.to_i
       puts "     Server waiting for #{size} Bytes of data"
-      socket.received_timeout(size,100_000) do |data|
+      socket.received_n_timeout(size,100_000) do |data|
        puts "     Server recieved buffer : #{data.size} Bytes"
        puts "     emit ack..."
        socket.send("o",0) 
@@ -61,7 +61,7 @@ if  ARGV.size==0 || ARGV[0]=="2"
        s,data=data[0..(1024-1)],data[1024..-1]
        socket.send s,0
      end 
-     p socket.received_timeout(1,[size/1000,1000].max)  ? "ack ok" : "!!! timeout ack"
+     p socket.received_n_timeout(1,[size/1000,1000].max)  ? "ack ok" : "!!! timeout ack"
      #puts "\n"*7
    }
    p "end client"
@@ -187,6 +187,42 @@ if ARGV.size==0 || ARGV[0]=="5"
   sleep 1
   UDPAgent.send_datagram("127.0.0.2",SRV_PORT,"Hello")
   sleep 10
+end
+
+if ARGV.size==0 || ARGV[0]=="6"
+  th=MServerAgent.run(2222,"localhost",22) do |chan|
+    puts "sv: connect"
+    @lchan||={}
+    @lchan[chan]=chan
+    chan.on_message do |mess| 
+      puts "sv: broadcast #{mess.inspect}..." 
+      @lchan.keys.each {|chan1|   chan1.send_message(mess) if chan1!=chan }
+      nil
+    end
+    chan.wait_end
+    @lchan.delete(chan)
+  end
+  lth=[]
+  5.times {
+    puts "####################### Run Client ########################"
+    lth << MClientAgent.run("localhost",2222) do |chan|
+      nb=0
+      chan.on_timer(100*rand(5..15)) { 
+        chan.send_message(["C",1,2,1.2,Time.now.to_f,true]) 
+        nb+=1
+        (chan.close rescue nil)if nb>50
+      }
+      chan.on_message { |mess| p "cli: receive: #{mess.inspect}" ; nil}
+      chan.wait_end
+      puts "client closed"
+    end
+    sleep rand(1..2)
+  }
+  sleep 10
+  puts "\n\n############# Kill all agents...\n\n"
+  lth.each { |th| th.kill} 
+  th.shutdown
+  sleep 2
 end
 
 puts "Test End !"

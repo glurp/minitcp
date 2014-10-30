@@ -126,13 +126,27 @@ UDP
 * **send_datagram(host,port,message)** : create a socket, send mesage and close socket (ca'nt receive a reply)
 * **send_datagram_on_socket(socket,host,port,message)** : use existant socket for send a message to ip:port
 
+Messages
+===
+Serveur and client ```MServerAgent``` and ```MClientAgent``` define a 'agent ' which
+can communicate by messages.
+
+Messages are ```ruby-data.inspect```, max size is 1 MByte.
+* MClientAgent.run(host,port) : connect to a MServerAgent, for communicate by message
+* MServerAgent.run(port,host,max-connections) : message server
+
+in Agent, socket are extended with this capability :
+* socket.send_message(data)
+* socket.on_message { |data|  .... ; ret_data}  will send ret_data to sender if not nil
+
+See test.rb for an example
 
 TODO
 ==
 
 * Serial line
 * more socket primitive
-
+* messages Agent : use Marchal instead of inspect/eval ....
 
 Tests case
 ==

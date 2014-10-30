@@ -317,7 +317,7 @@ end
 # Run a TCP serveur, with a max connection simultaneous,
 # When connection succes, call the bloc given with socket (extended by SocketReactive).
 #
-# MServer( "8080" , "0.0.0.0" ,1) { |socket| loop { p socket.gets} }
+# MServer.new( "8080" , "0.0.0.0" ,1) { |socket| loop { p socket.gets} }
 class MServer < GServer
   def self.service(port,host,max,&b)
     srv=new(port,host,max,&b)
@@ -337,5 +337,45 @@ class MServer < GServer
       puts  "Error in Mserver block: #{e} :\n  #{e.backtrace.join("\n  ")}"
     end
   end
+end
+
+##########################################################
+# messages stream
+##########################################################
+
+module SocketMessage
+	def on_message(timeout=nil,&b)
+		on_n_receive(6) do |head| 
+			len=head.to_i
+			received_n_timeout(len,10_000) do |data|
+				response=b.call(eval(data))
+				send(response) if response
+			end
+	  end
+  end
+	def send_message(message)
+		data=message.inspect
+		send(("%6d" % data.size)+data,0)		
+	end
+end
+
+class MClientAgent
+  def self.run(host,port,&b) 
+    me=MClientAgent.new
+	  MClient.run_continious(host,port,10_000) do |so|
+      so.extend(SocketMessage)
+      me.instance_eval { b.call(so) }
+	  end
+  end
+end
+
+class MServerAgent
+ def self.run(port,host,n,&b)
+   me=MClientAgent.new
+   MServer.service( port , host ,n) do |so|
+		so.extend(SocketMessage)
+		me.instance_eval { b.call(so) }		
+   end
+ end
 end
 
