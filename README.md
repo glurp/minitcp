@@ -61,6 +61,27 @@ A UDP sender :
 	)
 ```
 
+A Message agent :
+Message Client:
+```ruby
+MClientAgent.run("localhost",2222) do |chan|
+  chan.send_message({date: Time.now.to_f}) 
+  chan.on_message do |mess| 
+	puts "cli: receive: #{mess.inspect}" 
+	on_timer(10000) { chan.close } 
+	nil
+  end
+  chan.wait_end
+end
+```
+
+Message Server:
+```ruby
+MServerAgent.run(2222,"localhost",22) do |chan|
+    chan.on_message { |mess|  p mess ; "ok" }
+    chan.wait_end
+end
+```
 
 Docs: http://rubydoc.info/gems/minitcp
 
