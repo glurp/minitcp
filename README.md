@@ -68,7 +68,7 @@ MClientAgent.run("localhost",2222) do |chan|
   chan.send_message({date: Time.now.to_f}) 
   chan.on_message do |mess| 
 	puts "cli: receive: #{mess.inspect}" 
-	on_timer(10000) { chan.close } 
+	chan.close
 	nil
   end
   chan.wait_end
