@@ -15,7 +15,9 @@
 #      | ruby plot.rb --pos 0x200 --dim 400x100 0 0 100 alea auto
 ###############################################################
 
-require 'Ruiby'
+require_relative '../../Ruiby/lib/Ruiby'
+#require 'Ruiby'
+
 $bgcolor=::Gdk::Color.parse("#023")
 $axecolor=::Gdk::Color.parse("#AA8888")
 $axeopacity=1
@@ -41,6 +43,9 @@ class Measure
 			@lcurve << Measure.new(noc,y0,y1,label,autoscale)
 			@lcurve.size-1
 		end
+    def resize()
+			@lcurve.each { |m| m.resize }
+    end
 		def add(noc,y0,y1,label,autoscale)
 			@lcurve << Measure.new(noc,y0,y1,label,autoscale)
 			@lcurve.size-1
@@ -59,7 +64,8 @@ class Measure
 	end
 	def initialize(noc,min,max,label,auto_scale)
 	  @noc=noc
-	  @div,@offset=calc_coef(min,0.0,max,1.0)
+    @min,@max=min,max
+	  @div,@offset=calc_coef(@min,0.0,@max,1.0)
 	  @name=label
 	  @value= 0
 	  @curve=[]
@@ -76,22 +82,36 @@ class Measure
 		end
 		@label = "%s %5.2f" % [@name,@value]
 		v= @value * @div + @offset
-		py=[0.0,(H-HHEAD)*1.0,(H-HHEAD)*(1.0-v)].sort[1]+HHEAD
-		@curve << [W+PAS,py,v,@value]
+		py=[0.0,($H-HHEAD)*1.0,($H-HHEAD)*(1.0-v)].sort[1]+HHEAD
+		@curve << [$W+PAS,py,v,@value]
 		@curve.select! {|pt| pt[0]-=PAS; pt[0]>=0}
-	    p [@value,v,py] if $DEBUG
-	    auto_scale if @autoscale && @curve.size>5
+	  p [@value,v,py] if $DEBUG
+	  auto_scale if @autoscale && @curve.size>5
 	end
+  def resize()
+		   @div,@offset=calc_coef(@min,0.0,@max,1.0)
+       nbPt=$W/PAS
+       if nbPt<@curve.size
+         @curve=@curve[(@curve.size-nbPt)..-1]
+       end
+       p0=$W-@curve.size*PAS
+		   @curve.each_with_index {|a,i| 
+         y=a[3]*@div+@offset
+         a[0] = p0+i*PAS
+         a[1] = ($H-HHEAD)*(1-y)
+         a[2]=y
+       }
+  end
 	def auto_scale()
 		min,max=@curve.minmax_by {|pt| pt[2]}
 		if min!=max && (min[2]<-0.01 || max[2]>1.01)
 		   #p "correction1 #{@name} #{min} // #{max}"
-		   @div,@offset=calc_coef(min[3],0.0,max[3],1.0)
-		   @curve.each {|a| a[2]=a[3]*@div+@offset ; a[1] = (H-HHEAD)*(1-a[2])}
-		elsif (d=(max[2]-min[2]).abs)< 0.3 && (@curve.size-1) >= W/PAS && d>0.0001
+       @min,@max=min[3],max[3]
+       resize
+		elsif (d=(max[2]-min[2]).abs)< 0.3 && (@curve.size-1) >= $W/PAS && d>0.0001
 		   #p "correction2 #{@name} #{min} // #{max}"
 		   @div,@offset=calc_coef(min[3],min[2]-3*d,max[3],max[2]+3*d)
-		   @curve.each {|a| a[2]=a[3]*@div+@offset ; a[1] = (H-HHEAD)*(1.0-a[2])}			
+		   @curve.each {|a| a[2]=a[3]*@div+@offset ; a[1] = ($H-HHEAD)*(1.0-a[2])}			
 		end
 	end
 	def calc_coef(x0,y0,x1,y1)
@@ -136,11 +156,17 @@ def run(app)
 end
 
 def run_window()
-	Ruiby.app width: W, height: H, title: "Curve" do
+	Ruiby.app width: $W, height: $H, title: "Curve" do
 		stack do
-			@cv=canvas(W,H) do
+			@cv=canvas($W,$H) do
 				on_canvas_draw { |w,ctx| expose(w,ctx) } 
-	        end		
+        on_canvas_resize { |w,width,height| 
+           w.width_request,w.height_request=0,0
+           w.allocation.width,w.allocation.height=width,height
+           $W,$H=width,height; 
+           Measure.resize
+        }
+	    end		
 			popup(@cv) do
 				pp_item(" Plot ")	{  }
 				pp_separator
@@ -148,7 +174,7 @@ def run_window()
 				pp_item("Gnome Monitor") { Process.spawn("gnome-system-monitor") }
 				pp_item("Terminal") { system("lxterminal") }
 				pp_separator
-				pp_item("Exit")	{ ask("Exit ?") && exit(0) }
+				pp_item("Exit")	{ ask("Exit ?") && exit!(0) }
 			end
 		end
 		chrome(false)
@@ -164,15 +190,15 @@ def run_window()
 		end
     def draw_background(ctx)
 			ctx.set_source_rgba($bgcolor.red/65000.0, $bgcolor.green/65000.0, $bgcolor.blue/65000.0, 1)
-			ctx.rectangle(0,0,W,H)
+			ctx.rectangle(0,0,$W,$H)
 			ctx.fill()
 			ctx.set_source_rgba($bgcolor.red/65000.0, $bgcolor.green/65000.0, 05+$bgcolor.blue/65000.0, 0.3)
-			ctx.rectangle(0,0,W,HHEAD)
+			ctx.rectangle(0,0,$W,HHEAD)
 			ctx.fill()		
     end
     def draw_axes(ctx)
-			HHEAD.step(H,(H-HHEAD)/4)  { |h| line(ctx,0,h,    W,h,$axecolor,$axeopacity,1) }
-			0.step(W,W/8)              { |w| line(ctx,w,HHEAD,w,H,$axecolor,$axeopacity,1) }
+			HHEAD.step($H,($H-HHEAD)/4)  { |h| line(ctx,0,h,    $W,h,$axecolor,$axeopacity,1) }
+			0.step($W,$W/8)              { |w| line(ctx,w,HHEAD,w,$H,$axecolor,$axeopacity,1) }
 			ctx.stroke()
     end
     def line(ctx,x0,y0,x1,y1,color,opacity,width)
@@ -203,9 +229,9 @@ if $0==__FILE__
 	end  
 	if  ARGV.size>=2 && ARGV[0]=="--dim"
 	  _,geom=ARGV.shift,ARGV.shift
-	  W,H=geom.split(/[x,:]/).map(&:to_i)
+	  $W,$H=geom.split(/[x,:]/).map(&:to_i)
 	else
-		W,H=200,100
+		$W,$H=200,100
 	end  
 
 	while ARGV.size>0
