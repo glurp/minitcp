@@ -1,4 +1,6 @@
-0.12.4
+0.12.5
+    plot.rb : window resize enable
+    pingpongplot.rb : multiple url test
     README.md : message agent expample
     README.md : massage agent expalple
     README.md : example message
