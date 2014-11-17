@@ -61,7 +61,11 @@ class Measure
 			@lcurve.each_with_index { |m,index| m.plot_curve(index,ctx) }
 			@lcurve.each_with_index { |m,index| m.plot_label(index,ctx) }
 		end
+    def getValuesAtX(x)
+			@lcurve.map{ |m| "#{m.name} : #{m.get_value_at(x)}" }
+    end
 	end
+  attr_reader :label,:name
 	def initialize(noc,min,max,label,auto_scale)
 	  @noc=noc
     @min,@max=min,max
@@ -98,8 +102,8 @@ class Measure
 		   @curve.each_with_index {|a,i| 
          y=a[3]*@div+@offset
          a[0] = p0+i*PAS
-         a[1] = ($H-HHEAD)*(1-y)
-         a[2]=y
+         a[1] = ($H-HHEAD)*(1.0-y)+HHEAD
+         a[2] = y
        }
   end
 	def auto_scale()
@@ -111,16 +115,24 @@ class Measure
 		elsif (d=(max[2]-min[2]).abs)< 0.3 && (@curve.size-1) >= $W/PAS && d>0.0001
 		   #p "correction2 #{@name} #{min} // #{max}"
 		   @div,@offset=calc_coef(min[3],min[2]-3*d,max[3],max[2]+3*d)
-		   @curve.each {|a| a[2]=a[3]*@div+@offset ; a[1] = ($H-HHEAD)*(1.0-a[2])}			
+		   @curve.each {|a| 
+         a[2]=a[3]*@div+@offset 
+         a[1] = ($H-HHEAD)*(1.0-a[2])+HHEAD
+       }			
 		end
 	end
 	def calc_coef(x0,y0,x1,y1)
+    return [1,0] if  (x1-x0).abs< 0.00001
 		y0=[0.0,1.0,y0].sort[1]
 		y1=[0.0,1.0,y1].sort[1]
 		a=1.0*(y0-y1)/(x0-x1)
     b= (y0+y1-(x0+x1)*a)/2
     [a,b]
 	end
+  def get_value_at(x)
+    @curve.each { |pt| if pt[0]>=x then  return(pt.last) end }
+    return(-1)
+  end
 	def plot_curve(index,ctx)
 		return if @curve.size<2
 		a,*l=@curve
@@ -149,7 +161,7 @@ def run(app)
 	if $str
 		p $str if $DEBUG
 		Measure.scan_line($str)
-		gui_invoke { @cv.redraw }
+		gui_invoke { redrawCv }
 	else 
 		exit!(0)
 	end
@@ -157,6 +169,7 @@ end
 
 def run_window()
 	Ruiby.app width: $W, height: $H, title: "Curve" do
+    @pos_markeur=[0,0]
 		stack do
 			@cv=canvas($W,$H) do
 				on_canvas_draw { |w,ctx| expose(w,ctx) } 
@@ -166,6 +179,13 @@ def run_window()
            $W,$H=width,height; 
            Measure.resize
         }
+        on_canvas_button_press { |w,e,o| 
+          if e.button!=3
+            @pos_markeur=[e.x,10]
+            alert( Measure.getValuesAtX(e.x).join("\n") )
+          end
+          false
+        } 
 	    end		
 			popup(@cv) do
 				pp_item(" Plot ")	{  }
@@ -184,10 +204,17 @@ def run_window()
       draw_background(ctx)
       draw_axes(ctx)
 			Measure.draw_measures(ctx)
+      draw_markeurs(ctx)
 			(puts "source modified!!!";exit!(0)) if File.mtime(__FILE__)!=$mtime 
     rescue
      puts "#{$!}:\n  #{$!.backtrace().join("\n  ")}"
 		end
+    def redrawCv()
+      if @pos_markeur[0] && @pos_markeur[0]>0
+        @pos_markeur[0]-=PAS
+      end
+      @cv.redraw
+    end
     def draw_background(ctx)
 			ctx.set_source_rgba($bgcolor.red/65000.0, $bgcolor.green/65000.0, $bgcolor.blue/65000.0, 1)
 			ctx.rectangle(0,0,$W,$H)
@@ -205,6 +232,14 @@ def run_window()
 			ctx.set_source_rgba(color.red/65000.0, color.green/65000.0, color.blue/65000.0, opacity)
 		  ctx.set_line_width(width)
       ctx.move_to(x0,y0) ; ctx.line_to(x1,y1) ;ctx.stroke;
+    end
+    def draw_markeurs(ctx)
+        if @pos_markeur.last>0
+          ctx.set_source_rgba($axecolor.red/65000.0, $axecolor.green/65000.0, $axecolor.blue/65000.0, 1)
+          ctx.set_line_width(3)
+          ctx.move_to(@pos_markeur.first,$H) ; ctx.line_to(@pos_markeur.first,0) ;ctx.stroke;
+          @pos_markeur[1]-=1
+        end
     end
 		$mtime=File.mtime(__FILE__)
 
