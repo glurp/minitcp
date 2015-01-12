@@ -1,3 +1,8 @@
+0.13.1
+    relaiproxy.rb : notraces
+    relai_config.data : test1 aded
+    minitcp.rb : no traces
+0.13.0 : 2014-11-28 13:35:33 +0100
     plot.rb : window resize enable
     pingpongplot.rb : multiple url test
     README.md : message agent expample
