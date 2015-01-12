@@ -29,7 +29,7 @@ module SocketReactive
     loop do
       #p ["waiting ",s,data_readed]
       sd=s>1024 ? 1024 : s
-      data=(self.recv(sd) rescue nil)
+      data=(self.recv(sd) rescue (p $!;nil))
       #p "nrec: w#{sizemax}/ rec:#{(data||'').size} / #{sd} old=#{data_readed.size} /// #{(data||'').size<70 ? data : "."}"
       if data && data.size>0
         self.data_readed=self.data_readed+data
