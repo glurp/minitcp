@@ -321,12 +321,12 @@ end
 class MServer < GServer
   def self.service(port,host,max,&b)
     srv=new(port,host,max,&b)
-    srv.audit = true
+    srv.audit = false
     srv.start
     srv
   end
   def initialize(port,host,max=1,&b)
-    super(port,host,max)
+    super(port,host,max,nil)
     @bloc=b
   end
   def serve( io )
