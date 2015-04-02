@@ -1,4 +1,6 @@
-0.13.2
+0.14.1
+    minitcp.rb : force data received to encding BINARY
+0.14.0 : 2015-01-13 20:56:17 +0100
     minitcp.rb : no audit, no log for tcp server
     relaiproxy.rb : notraces
     relai_config.data : test1 aded
