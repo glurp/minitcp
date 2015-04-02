@@ -11,9 +11,9 @@ require 'gserver'
 
 
 module SocketReactive
-
+  def strempty() ''.force_encoding Encoding::BINARY end
   def data_readed=(v) @data_readed=v end
-  def data_readed()   @data_readed||="" end
+  def data_readed()   @data_readed||=strempty end
 
   # read n byte, block the caller, return nil if socket if close
   # if block is defined, it is yield with data, method return whith the value of yield
@@ -75,7 +75,7 @@ module SocketReactive
     Thread.new() do
       begin
         if self.data_readed.size>0
-          buff,self.data_readed=self.data_readed,""
+          buff,self.data_readed=self.data_readed,strempty
           yield(buff)
         end
         loop do
