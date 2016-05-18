@@ -249,12 +249,6 @@ class MClient
 end
 
 
-# Assure connection to server, extend socket connection by SocketReactive module.
-#
-#	MClient.run_one_shot("localhost",2200)       do |socket| .. end.join
-#
-#	MClient.run_continous("localhost",2200,6000) do |socket| .. end.join
-#
 $udp_socket={}
 class UDPAgent
   # maintain a connection to a UDP serveur, sleep timer_interconnection_ms millisecondes
@@ -271,7 +265,8 @@ class UDPAgent
 
   Thread.abort_on_exception=true
 
-  # send datagram on timer
+  # Datagramme Client: send datagram (on timer), can receive response
+  # UDPAgent.on_timer(1000,{on_timer: proc {} , on_receive: proc {} })
   def self.on_timer(periode,options)
     Thread.new do 
       sleep 0.1
@@ -305,7 +300,9 @@ class UDPAgent
       end
     end
   end
-  # recieved UDP datagramme, bloc can ellaborate a reply, which will be sending to client
+  
+  # Datagramme server:  can receive message, can respond to sender
+  # UDPAgent.on_datagramme(ip,port) { |data,ip,port| ok ? "response-to-send"  : nil)
   def self.on_datagramme(host,port)
     serv = UDPSocket.new
     serv.bind(host, port)
