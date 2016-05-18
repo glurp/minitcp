@@ -145,8 +145,10 @@ UDP
 
 2 primitives :
 
-* **send_datagram(host,port,message)** : create a socket, send mesage and close socket (ca'nt receive a reply)
-* **send_datagram_on_socket(socket,host,port,message)** : use existant socket for send a message to ip:port
+* **send_datagram(host,port,message)** : 
+   create a socket, send mesage and close socket (ca'nt receive a reply)
+* **send_datagram_on_socket(socket,host,port,message)** : 
+  use an existant socket for send a message to ip:port
 
 Messages
 ===
