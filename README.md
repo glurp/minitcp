@@ -140,15 +140,19 @@ UDP
 
 2 type of agents : 
 
-* **Server** : receive data from anywhere, can reply to sender
-* **Timer**  : emit to everybody, can receive response to them
+* **datagramme** (server) : 
+   receive data from anywhere, can reply to sender : UDPAgent.on_datagramme
+* **Timer**  (client) : 
+   can emit to everybody, periodicly. Can receive response from them : UDPAgent.on_timer
+   ```send_datagram_on_socket``` can be used for emit spontaneously to a server
 
 2 primitives :
 
 * **send_datagram(host,port,message)** : 
-   create a socket, send mesage and close socket (ca'nt receive a reply)
+   create a socket, send mesage and close socket (can't receive a reply)
 * **send_datagram_on_socket(socket,host,port,message)** : 
   use an existant socket for send a message to ip:port
+  the existant socket should be one created by a current UDPAgent timer or server
 
 Messages
 ===
