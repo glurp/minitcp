@@ -255,8 +255,9 @@ end
 #
 #	MClient.run_continous("localhost",2200,6000) do |socket| .. end.join
 #
+$udp_socket={}
 class UDPAgent
-  # maintain a conntection to a TCP serveur, sleep timer_interconnection_ms millisecondes
+  # maintain a connection to a UDP serveur, sleep timer_interconnection_ms millisecondes
   # beetwen each reconnections 
   def self.send_datagram(host,port,mess)
         sock = UDPSocket.new
@@ -273,18 +274,29 @@ class UDPAgent
   # send datagram on timer
   def self.on_timer(periode,options)
     Thread.new do 
-      sleep periode/1000.0
-      sock = UDPSocket.new
+      sleep 0.1
       if options[:port]
-        sock.bind("0.0.0.0", options[:port])
+        if $udp_socket[options[:port]]
+           sock=$udp_socket[options[:port]]
+        else
+          sock = UDPSocket.new
+          sock.bind("0.0.0.0", options[:port])
+          $udp_socket[options[:port]]=sock
+        end
+      end
+      if options[:on_timer]
+          h=options[:on_timer].call()
+          self.send_datagram_on_socket(sock,h[:host], h[:port],h[:mess]) if h && h[:mess] && h[:host] && h[:port]
       end
       loop do
-        rep=IO.select([sock],nil,nil,periode/1000.0)
+        nextt= (((Time.now.to_f*1000).round/periode + 1)*periode)/1000.0
+        delta=nextt - Time.now.to_f
+        rep=IO.select([sock],nil,nil,delta)
         #puts  "IO.SELECT => #{rep}"
         if rep
           Thread.new {
-               data,peer=sock.recvfrom(1024)
-               options[:on_receive].call(data,peer,sock)
+               data,peer=(sock.recvfrom(1024) rescue [nil,nil])
+               options[:on_receive].call(data,peer,sock) if data
           } if options[:on_receive]
         elsif options[:on_timer]
           h=options[:on_timer].call()
