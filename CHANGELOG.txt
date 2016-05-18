@@ -1,4 +1,8 @@
-0.15.1
+0.17.1
+    minitcp.rb : updage comments on UDPAgent
+    README.md : update udp docs
+0.17.0 : 2016-05-18 16:00:30 +0200
+0.16.0 : 2016-05-18 16:00:15 +0200
     minitcp.rb : correction UDPAgent
     README.md : update
 0.15.0 : 2015-04-02 15:51:14 +0200
