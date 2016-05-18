@@ -1,4 +1,7 @@
-0.14.1
+0.15.1
+    minitcp.rb : correction UDPAgent
+    README.md : update
+0.15.0 : 2015-04-02 15:51:14 +0200
     minitcp.rb : force data received to encding BINARY
 0.14.0 : 2015-01-13 20:56:17 +0100
     minitcp.rb : no audit, no log for tcp server
